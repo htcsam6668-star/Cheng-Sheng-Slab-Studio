@@ -1,0 +1,2776 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>呈盛大板 3D 模擬器｜電腦版 2.12</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#111827;--danger:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+header{position:sticky;top:0;z-index:5;background:#111827;color:#fff;padding:15px 16px}
+h1{font-size:20px;margin:0 0 3px}.sub{font-size:12px;opacity:.75}
+nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:9px;background:#fff;position:relative;top:auto;z-index:4;border-bottom:1px solid var(--line)}
+nav button{border:0;background:#f3f4f6;border-radius:9px;padding:9px 3px;font-weight:800;font-size:11px}
+nav button.active{background:#2563eb;color:#fff;box-shadow:0 2px 8px #2563eb33}
+main{max-width:760px;margin:auto;padding:13px}.page{display:none}.page.active{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #00000008}
+h2{font-size:17px;margin:0 0 13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kitchen-config-fields{grid-column:1/-1;min-width:0}.kitchen-config-fields .grid{gap:14px 12px}.kitchen-config-fields label{display:block;line-height:1.45;margin-bottom:6px}.kitchen-config-fields select{width:100%;min-width:0}
+label{font-size:12px;color:var(--muted);font-weight:800;display:block;margin-bottom:5px}
+input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:16px;background:#fff}
+button.primary{width:100%;padding:13px;border:0;border-radius:11px;background:#111827;color:#fff;font-size:16px;font-weight:900;margin-top:12px}
+button.secondary{padding:9px 12px;border:1px solid #d1d5db;background:#fff;border-radius:9px;font-weight:800}
+.result{background:#f9fafb;border-radius:12px;padding:13px;margin-top:12px}.big{font-size:30px;font-weight:900}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
+.badge{display:inline-block;padding:4px 7px;background:#eef2ff;border-radius:7px;font-size:11px;font-weight:800}
+.history-item{padding:12px 0;border-bottom:1px solid var(--line)}.history-item:last-child{border:0}
+.actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}.danger{color:var(--danger)!important}
+.empty{text-align:center;color:var(--muted);padding:25px}.formula{font-size:12px;color:var(--muted);line-height:1.6}
+.sheet{border:2px solid #374151;background:#f9fafb;position:relative;overflow:hidden;margin-top:12px}
+.piece{position:absolute;border:2px solid #111827;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;text-align:center;overflow:hidden}
+.notice{font-size:12px;color:#92400e;background:#fffbeb;border-radius:10px;padding:9px;margin-top:10px}
+@media(max-width:620px){nav{grid-template-columns:repeat(4,minmax(76px,1fr));overflow-x:auto}nav button{font-size:10px;white-space:nowrap}.grid{grid-template-columns:1fr}.kitchen-config-fields{margin-top:16px!important;padding-top:16px!important}.kitchen-config-fields .grid{grid-template-columns:1fr 1fr;gap:14px 10px}.kitchen-config-fields h3{line-height:1.45;margin-bottom:14px!important}}
+input::placeholder{color:#9ca3af} input:focus::placeholder{opacity:.45}
+#calcLoading{position:fixed;inset:0;background:rgba(255,255,255,.72);backdrop-filter:blur(2px);z-index:9999;display:none;align-items:center;justify-content:center}
+#calcLoading.show{display:flex}
+.loading-box{background:#111827;color:#fff;border-radius:16px;padding:20px 28px;min-width:170px;text-align:center;box-shadow:0 10px 30px #0003}
+.spinner{width:34px;height:34px;border:4px solid #ffffff55;border-top-color:#fff;border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 10px}
+.loading-text{font-size:15px;font-weight:800}
+.layout-loading-box{min-width:280px;max-width:calc(100vw - 36px);padding:22px 24px}
+.progress-track{height:10px;background:#374151;border-radius:999px;overflow:hidden;margin:14px 0 9px}
+.progress-bar{height:100%;width:0%;background:#fff;border-radius:999px;transition:width .18s ease}
+.loading-progress,.loading-eta{font-size:13px;line-height:1.5;color:#d1d5db}
+.loading-progress{font-weight:800}
+.loading-eta{margin-top:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.piece-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.piece-title{grid-column:1/-1;font-weight:900;margin-top:5px}
+.remove-piece{grid-column:1/-1;padding:7px 10px;border:1px solid #d1d5db;background:#fff;border-radius:9px;font-weight:800}
+.add-piece{width:100%;padding:11px;border:2px dashed #9ca3af;background:#fff;border-radius:11px;font-size:15px;font-weight:900;margin-top:10px}
+@media(max-width:460px){.piece-row{grid-template-columns:1fr}}
+.layout-board{box-shadow:inset 0 0 0 1px #cbd5e1}.layout-board>div{min-width:0;min-height:0}\n
+
+ .loss-results{
+  margin-top:14px;
+  background:#f8fafc;
+  border-radius:16px;
+  padding:4px 20px;
+  overflow:hidden;
+}
+.loss-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(120px,auto) 72px;
+  align-items:center;
+  min-height:64px;
+  column-gap:12px;
+  border-bottom:1px solid #e2e8f0;
+}
+.loss-row:last-child{border-bottom:0}
+.loss-name,.loss-row strong,.loss-unit{
+  font-size:18px !important;
+  line-height:1.35 !important;
+}
+.loss-name{
+  color:#334155;
+  font-weight:600;
+  white-space:nowrap;
+}
+.loss-row strong{
+  color:#0f172a;
+  font-weight:800 !important;
+  text-align:right;
+  white-space:nowrap;
+}
+.loss-unit{
+  color:#64748b;
+  text-align:left;
+  white-space:nowrap;
+}
+.loss-row-main{min-height:64px !important}
+.loss-detail{padding:10px 0 4px;color:#64748b;font-size:13px;line-height:1.8;word-break:break-word}
+@media(max-width:600px){
+  .loss-results{padding:4px 14px;border-radius:14px}
+  .loss-row{
+    grid-template-columns:minmax(0,1fr) minmax(90px,auto) 58px;
+    min-height:60px;
+    column-gap:8px;
+  }
+  .loss-name,.loss-row strong,.loss-unit{
+    font-size:18px !important;
+  }
+  .loss-row-main{min-height:60px !important}
+  .loss-detail{font-size:12px}
+}
+
+
+/* 5.7 排版最佳化 */
+.inline-option{display:flex;align-items:center}
+.inline-option label{margin:0;display:flex;align-items:center;gap:7px}
+.inline-option input[type="checkbox"]{width:auto}
+.remnant-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.remnant-item:last-child{border-bottom:0}
+.remnant-cai{margin-left:6px;color:var(--muted);font-size:12px}
+.layout-board .piece{font-size:12px}
+.remnant-overlay{position:absolute;box-sizing:border-box;border:2px solid #ef4444;background:rgba(239,68,68,.035);display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none;z-index:3;color:#ef4444;font-size:11px;font-weight:800;line-height:1.15;text-shadow:0 1px 2px #fff;overflow:hidden;padding:2px}.remnant-overlay span{color:#ef4444;white-space:nowrap}
+@media(max-width:600px){
+  .remnant-item{font-size:13px}
+  .remnant-item button{padding:7px 9px;font-size:12px}
+}
+
+/* 5.18 全系統介面統一：以花紋版配料的資訊層級為基準 */
+.page-head{background:linear-gradient(135deg,#0f2745,#173f68);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:0 4px 14px #0000000d}.page-head h2{margin:0 0 4px;font-size:20px}.page-head p{margin:0;color:#dbeafe;font-size:12px;line-height:1.6}.section-label{display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px;font-weight:900;color:#1e3a5f}.section-label b{background:#1e3a5f;color:#fff;border-radius:99px;padding:3px 7px}.standard-card{border:1px solid #dbe3ec;border-radius:16px;box-shadow:0 3px 12px #00000008}.standard-card h2{color:#173f68}.standard-card .primary{background:#173f68}.standard-card .primary:hover{background:#0f2745}.case-image-card{margin-top:12px;border:1px solid #dbe3ec;border-radius:16px;background:#fff;padding:12px}.case-image-wrap{border:1px solid #cbd5e1;border-radius:12px;overflow:auto;background:#f8fafc}.case-image-wrap img{display:block;width:100%;height:auto}.case-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.case-actions button{min-height:44px}.case-caption{font-size:12px;color:#64748b;line-height:1.6;margin-top:8px}.feature-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.feature-chip{border:1px solid #dbe3ec;background:#f8fafc;border-radius:12px;padding:9px;text-align:center;font-size:11px;color:#334155}.feature-chip b{display:block;font-size:13px;color:#173f68;margin-bottom:3px}@media(max-width:620px){.feature-strip{grid-template-columns:1fr 1fr}.page-head{padding:14px}.page-head h2{font-size:18px}}
+
+/* 5.17 花紋版配料：以紋路連續為核心的專用介面 */
+.pattern-hero{background:linear-gradient(135deg,#0f2745,#173f68);color:#fff;border-radius:16px;padding:18px;margin-bottom:12px}
+.pattern-hero h2{margin:0 0 5px;font-size:20px}.pattern-hero p{margin:0;color:#dbeafe;font-size:12px;line-height:1.6}
+.pattern-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:12px}
+.pattern-upload{border:2px dashed #93c5fd;background:#eff6ff;border-radius:14px;padding:14px;text-align:center;cursor:pointer}
+.pattern-upload input{display:none}.upload-btn{display:inline-block;background:#2563eb;color:#fff;border-radius:10px;padding:10px 16px;font-weight:900}
+.pattern-preview{margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid #cbd5e1;background:#f8fafc;min-height:170px;display:flex;align-items:center;justify-content:center}
+.pattern-preview img{display:block;max-width:100%;max-height:300px;object-fit:contain}
+.pattern-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #dbe3ec;border-radius:12px;overflow:hidden;font-size:12px}
+.pattern-table th,.pattern-table td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:middle}.pattern-table th{background:#f1f5f9;font-weight:900}.pattern-table tr:last-child td{border-bottom:0}
+.pattern-table input{padding:8px;font-size:14px;border-radius:8px}.pattern-table .small-input{width:76px}.pattern-table .name-input{min-width:90px}
+.pattern-result{background:#fff;border:1px solid #dbe3ec;border-radius:16px;padding:12px;margin-top:12px}
+.pattern-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.pattern-stat{background:#f8fafc;border-radius:12px;padding:10px;text-align:center}.pattern-stat b{display:block;font-size:19px}.pattern-stat span{font-size:11px;color:#64748b}
+.pattern-board{position:relative;background:#f8fafc;border:3px solid #1e3a5f;overflow:hidden;margin:auto;box-shadow:0 4px 14px #0001}.pattern-board img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;opacity:.96}
+.pattern-cut{position:absolute;border:2px dashed #dc2626;display:flex;align-items:center;justify-content:center;text-align:center;color:#991b1b;font-weight:900;background:rgba(255,255,255,.12);text-shadow:0 1px 2px #fff;overflow:hidden}.pattern-cut .cut-label{background:rgba(255,255,255,.84);border-radius:8px;padding:4px 6px;font-size:11px}
+.pattern-remnant{position:absolute;border:2px solid #ef4444;color:#dc2626;background:rgba(239,68,68,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;pointer-events:none}
+.pattern-explain{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.explain-card{border:1px solid #dbe3ec;border-radius:14px;padding:12px;background:#fff}.explain-card h3{margin:0 0 8px;font-size:15px}.explain-list{margin:0;padding-left:20px;font-size:12px;line-height:1.8}
+.pattern-goals{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.goal{border-top:3px solid #1e3a5f;padding:9px 5px;text-align:center;font-size:11px}.goal b{display:block;font-size:13px;margin-bottom:3px}
+.island-preview{height:210px;position:relative;background:linear-gradient(#f8fafc,#eef2f7);border-radius:12px;overflow:hidden}.island-top,.island-front,.island-side{position:absolute;border:2px solid #7c2d12;overflow:hidden;background:#f7f2e8}.island-top{width:70%;height:34%;left:12%;top:20%;transform:skewX(-18deg);}.island-front{width:70%;height:32%;left:15%;top:52%;}.island-side{width:17%;height:32%;right:7%;top:35%;transform:skewY(-18deg)}.island-top img,.island-front img,.island-side img{width:100%;height:100%;object-fit:cover}.island-tag{position:absolute;background:#7c2d12;color:#fff;border-radius:99px;padding:3px 8px;font-size:10px;font-weight:900}
+@media(max-width:720px){.pattern-grid,.pattern-explain{grid-template-columns:1fr}.pattern-summary{grid-template-columns:repeat(2,1fr)}.pattern-goals{grid-template-columns:1fr 1fr}.pattern-table{font-size:11px}.pattern-table th,.pattern-table td{padding:6px}}
+
+/* ===== 5.20 App UI：S26 Ultra / Mobile-first ===== */
+:root{
+  --app-navy:#0f2745;--app-blue:#173f68;--app-blue2:#2563eb;
+  --app-red:#dc2626;--app-green:#16a34a;--app-surface:#ffffff;
+}
+body{padding-bottom:0}
+header{background:linear-gradient(135deg,var(--app-navy),var(--app-blue));}
+main{padding-bottom:24px}
+.app-bottom-nav{
+  display:none;
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.96);backdrop-filter:blur(16px);
+  border-top:1px solid #dbe3ec;box-shadow:0 -6px 22px #00000012;
+}
+.app-bottom-nav .app-tab{
+  flex:1;border:0;background:transparent;border-radius:12px;
+  min-height:52px;padding:5px 2px;color:#64748b;font-weight:800;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+.app-bottom-nav .app-tab .ico{font-size:20px;line-height:1}
+.app-bottom-nav .app-tab .txt{font-size:10px;line-height:1.1}
+.app-bottom-nav .app-tab.active{color:#173f68;background:#eff6ff}
+.app-top-tools{display:flex;align-items:center;gap:7px;margin-top:9px}
+.app-pill{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;
+  background:#ffffff18;color:#dbeafe;border:1px solid #ffffff22;font-size:10px;font-weight:800
+}
+.pattern-direction-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;
+  background:#fff1f2;color:#b91c1c;font-size:11px;font-weight:900
+}
+.cut-direction-arrow{
+  position:absolute;z-index:5;color:#b91c1c;font-size:12px;font-weight:900;
+  background:#fff8;border-radius:999px;padding:2px 6px;pointer-events:none
+}
+.layout-board .piece{border-color:#173f68;background:#ffffffee}
+.layout-board .piece .piece-meta{font-size:10px;color:#64748b;margin-top:2px}
+.layout-score-card{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px
+}
+.layout-score-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center}
+.layout-score-item b{display:block;font-size:18px;color:#173f68}
+.layout-score-item span{display:block;font-size:10px;color:#64748b;margin-top:2px}
+.optimization-note{
+  display:flex;gap:8px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;
+  color:#1e3a5f;border-radius:12px;padding:10px;font-size:12px;line-height:1.6;margin-top:10px
+}
+.pattern-board-legend{
+  display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;font-size:10px;color:#475569
+}
+.pattern-board-legend span{padding:4px 7px;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0}
+.case-sheet-meta{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px
+}
+.case-sheet-meta div{background:#f8fafc;border-radius:10px;padding:8px;text-align:center}
+.case-sheet-meta b{display:block;font-size:14px;color:#173f68}
+.case-sheet-meta span{font-size:10px;color:#64748b}
+@media(max-width:720px){
+  body{padding-bottom:76px}
+  header{position:sticky;top:0}
+  nav{display:none}
+  .app-bottom-nav{display:flex}
+  main{padding:10px 10px 20px}
+  .page-head{border-radius:14px}
+  .card{border-radius:14px;padding:13px}
+  .layout-score-card{grid-template-columns:repeat(2,1fr)}
+  .case-sheet-meta{grid-template-columns:repeat(2,1fr)}
+}
+@media(min-width:721px){
+  .app-bottom-nav{display:none!important}
+}
+
+
+/* 5.21 interactive cutting editor */
+.editor-toolbar{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.editor-btn{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 11px;font-weight:800;color:#173f68}
+.editor-btn.primary{background:#173f68;color:#fff}
+.editor-btn.warn{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
+.board-editor-wrap{overflow:auto;border:1px solid #dbe3ec;border-radius:14px;background:#eef2f7;padding:10px}
+.board-editor{position:relative;background:#f8fafc;border:2px solid #173f68;touch-action:none}
+.editor-piece{position:absolute;box-sizing:border-box;border:2px solid #173f68;background:#ffffffed;border-radius:5px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:grab;user-select:none;touch-action:none}
+.editor-piece.selected{border:3px solid #dc2626;box-shadow:0 0 0 2px #fecaca}
+.editor-piece.locked{border-style:dashed;cursor:not-allowed}
+.ep-name{font-weight:900;font-size:11px;color:#173f68}.ep-size{font-size:9px;color:#475569}.ep-rotate{font-size:9px;color:#b91c1c}
+.editor-sidepanel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.editor-info,.cad-export-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;padding:9px;font-size:12px}
+.editor-help{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a5f;border-radius:11px;padding:10px;font-size:12px;line-height:1.55;margin-top:10px}
+.editor-warning{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:11px;padding:10px;font-size:12px;line-height:1.55;margin-top:10px}
+@media(max-width:720px){.editor-sidepanel{grid-template-columns:1fr}.editor-toolbar{position:sticky;top:68px;z-index:8;background:#fff;padding:6px;border-radius:10px;box-shadow:0 2px 10px #0001}}
+
+/* ===== 5.21.2 花紋中島：實際原板裁切來源預覽 ===== */
+.pattern-island-card{background:#fff;border:1px solid #dbe3ec;border-radius:16px;padding:14px;margin-top:12px}
+.pattern-island-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pattern-island-head h2{margin:0;color:#0f2745}
+.pattern-island-tools{display:flex;gap:6px;flex-wrap:wrap}
+.pattern-tool-chip{border:1px solid #cbd5e1;background:#f8fafc;color:#173f68;border-radius:999px;padding:7px 10px;font-weight:900;font-size:11px}
+.island-status{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.island-status span{padding:6px 9px;border-radius:999px;background:#f8fafc;border:1px solid #dbe3ec;font-size:10px;font-weight:900}
+.island-status .ok{color:#166534;border-color:#bbf7d0;background:#f0fdf4}.island-status .warn{color:#991b1b;border-color:#fecaca;background:#fef2f2}
+.island-stage{position:relative;background:linear-gradient(180deg,#f8fafc,#edf2f7);border-radius:14px;min-height:370px;overflow:hidden;margin-top:10px;padding:22px}
+.island-model{position:relative;width:min(920px,100%);height:330px;margin:auto}
+.island-panel{position:absolute;overflow:hidden;border:2px solid #173f68;background:#e5e7eb;box-shadow:0 8px 18px #0002}
+.island-panel .crop{position:absolute;inset:0;background-repeat:no-repeat;background-color:#e5e7eb}
+.island-top{left:9%;top:8%;width:68%;height:43%;z-index:3;clip-path:polygon(3% 0,100% 0,96% 100%,0 100%)}
+.island-front{left:9%;top:50%;width:65%;height:38%;z-index:2}
+.island-side{left:74%;top:31%;width:16%;height:57%;z-index:1;clip-path:polygon(15% 0,100% 0,84% 100%,0 100%)}
+.island-overlay{position:absolute;inset:0;z-index:10;pointer-events:none}
+.island-label{position:absolute;background:#fff;border:2px solid #dc2626;color:#0f2745;border-radius:10px;padding:7px 10px;font-weight:900;font-size:12px;box-shadow:0 3px 10px #0002;line-height:1.25}
+.island-label b{color:#b91c1c}
+.island-vein{position:absolute;color:#173f68;font-weight:1000;font-size:12px;text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff;background:#ffffffd9;border-radius:999px;padding:3px 7px}
+.island-seam{position:absolute;border-top:3px solid #dc2626;z-index:12;pointer-events:none;box-shadow:0 0 0 2px #fff8}
+.island-seam.side{border-top:0;border-left:3px solid #dc2626}
+.island-note{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.island-note div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px;text-align:center;font-size:11px}
+.island-note b{display:block;color:#173f68;font-size:14px;margin-bottom:2px}
+.pattern-cut-visual{position:relative;border-radius:14px;background:#f8fafc;border:1px solid #dbe3ec;padding:10px}
+.pattern-cut-visual .cut-board{position:relative;margin:auto;border:3px solid #173f68;background:#eef2f7;overflow:hidden}
+.pattern-cut-visual .cut-source{position:absolute;inset:0;background-repeat:no-repeat;background-size:100% 100%;opacity:.88}
+.pattern-cut-visual .cut-line{position:absolute;border:3px dashed #dc2626;box-sizing:border-box;z-index:3;box-shadow:0 0 0 2px #fff8}
+.pattern-cut-visual .cut-label{position:absolute;z-index:5;background:#0f2745;color:#fff;border-radius:7px;padding:4px 6px;font-size:10px;font-weight:900;white-space:nowrap}
+.pattern-cut-visual .vein-arrow{position:absolute;z-index:6;color:#173f68;font-weight:1000;background:#ffffffd9;border-radius:999px;padding:3px 7px;font-size:10px}
+.pattern-legend-new{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.pattern-legend-new span{padding:6px 9px;border-radius:999px;font-size:10px;font-weight:900;background:#f8fafc;border:1px solid #dbe3ec}
+.pattern-legend-new .red{border-color:#fecaca;color:#b91c1c}.pattern-legend-new .blue{border-color:#bfdbfe;color:#173f68}.pattern-legend-new .gold{border-color:#fde68a;color:#92400e}
+@media(max-width:720px){
+ .island-stage{padding:10px;min-height:330px;overflow:auto}
+ .island-model{min-width:680px;transform:scale(.84);transform-origin:top left;margin-bottom:-45px}
+ .island-note{grid-template-columns:1fr}
+ .pattern-island-head{align-items:flex-start}
+}
+.patternTable input[type='number']::placeholder{color:#9aa3ad;opacity:1}.patternTable input[type='number']{color:#172033}
+/* 5.21.8：花紋版配料輸入尺寸與紋路控制 */
+.pattern-table .pattern-size-input{
+  width:82px;
+  min-width:82px;
+  height:42px;
+  padding:7px 8px;
+  font-size:15px;
+  font-weight:700;
+  box-sizing:border-box;
+}
+.pattern-table .pattern-qty-input{
+  width:52px;
+  min-width:52px;
+  height:42px;
+  padding:7px 6px;
+  font-size:15px;
+  font-weight:700;
+  box-sizing:border-box;
+}
+.pattern-table select[data-k="vein"]{
+  min-width:190px;
+  height:44px;
+  padding:6px 30px 6px 10px;
+  font-size:15px;
+  font-weight:700;
+  border-radius:9px;
+  box-sizing:border-box;
+}
+.pattern-table input[data-k="rotate"]{
+  width:24px;
+  height:24px;
+  transform:scale(1.08);
+  accent-color:#1e3a5f;
+}
+.pattern-table input::placeholder{color:#9aa3ad;opacity:1}
+@media(max-width:600px){
+  .pattern-table .pattern-size-input{width:82px;min-width:82px}
+  .pattern-table .pattern-qty-input{width:52px;min-width:52px}
+  .pattern-table select[data-k="vein"]{min-width:190px;height:46px;font-size:15px}
+}
+
+/* 5.21.8：手機版移除最上方藍色 Header，讓計算內容直接開始 */
+@media(max-width:620px){
+  body > header{
+    display:none !important;
+  }
+  body > nav{
+    top:auto !important;
+  }
+}
+
+/* 5.21.8：網頁版與手機版皆移除最上方藍色 Header，不佔用預覽畫面 */
+header,
+.app-header,
+.top-header,
+.hero-header,
+.header-bar{
+  display:none !important;
+}
+body{
+  padding-top:0 !important;
+}
+</style>
+<style>
+.calc-field-error{border-color:#dc2626!important;background:#fff7f7!important;box-shadow:0 0 0 3px #fecaca66!important}
+.input-error-hint{display:block;margin-top:4px;color:#b91c1c;font-size:11px;font-weight:800}
+.calc-error-modal{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;background:#0f172a66;padding:18px}
+.calc-error-modal.show{display:flex}.calc-error-box{width:min(430px,100%);background:#fff;border-radius:16px;padding:18px;box-shadow:0 20px 50px #0004}
+.calc-error-box h3{margin:0 0 8px;color:#991b1b}.calc-error-box p{margin:0 0 12px;color:#334155;line-height:1.6;font-size:13px}
+.calc-error-list{margin:0 0 14px;padding-left:20px;color:#475569;font-size:12px;line-height:1.7}.calc-error-box button{width:100%;border:0;border-radius:10px;background:#173f68;color:#fff;padding:11px;font-weight:900}
+.input-help-hint{margin-top:3px;color:#64748b;font-size:10px}
+
+<style>
+.slab-brand-field{grid-column:1/-1}
+.slab-brand-field select{font-weight:700;color:#173f68}
+</style>
+
+<style>
+.line-share-btn{
+  display:inline-flex!important;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;padding:10px 16px!important;border:0!important;border-radius:11px!important;
+  background:#06C755!important;color:#fff!important;font-size:15px!important;font-weight:900!important;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.line-share-btn:hover{background:#05b34c!important}
+.line-share-btn:active{transform:translateY(1px)}
+.line-svg-icon{width:24px;height:24px;flex:0 0 24px;display:block}
+@media(max-width:620px){.line-share-btn{width:100%;min-height:48px;font-size:15px!important}}
+button,.add-piece,.upload-btn{touch-action:manipulation}
+</style>
+<style>.grid-rule-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:12px;align-items:end;margin-top:12px}.rule-hint{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;font-size:13px;line-height:1.6;color:#166534;font-weight:700}.grid-rule-row select{width:100%}@media(max-width:620px){.grid-rule-row{grid-template-columns:1fr}.rule-hint{margin-top:0}}</style>
+<style>
+.kitchen-prompt-card{margin-bottom:14px}
+.kitchen-prompt-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.kitchen-prompt-grid>div{min-width:0}
+.kitchen-prompt-grid label{display:block;font-weight:800;margin:8px 0 6px}
+.kitchen-prompt-grid select,.kitchen-prompt-card textarea{
+  width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;
+  padding:12px;font-size:15px;background:#fff;color:#172033
+}
+.kitchen-prompt-card textarea{min-height:260px;line-height:1.55;resize:vertical;font-family:Arial,sans-serif}
+.kitchen-prompt-note{margin-top:12px;padding:11px 12px;border-radius:10px;background:#eff6ff;color:#1e3a5f;font-size:14px;line-height:1.5}
+.kitchen-prompt-actions,.kitchen-prompt-quick{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.kitchen-prompt-actions button,.kitchen-prompt-quick button{min-height:42px}
+.kitchen-prompt-status{margin-top:10px;font-size:14px;color:#166534}
+@media(max-width:620px){
+  .kitchen-prompt-grid{grid-template-columns:1fr}
+  .kitchen-prompt-card textarea{min-height:300px;font-size:14px}
+  .kitchen-prompt-actions button,.kitchen-prompt-quick button{flex:1 1 100%}
+}
+</style>
+
+
+<style>
+.kitchen3d-wrap{position:relative;width:100%;height:clamp(300px,55vw,560px);background:linear-gradient(180deg,#e9eef3,#cbd5df);border:1px solid #cbd5e1;border-radius:14px;overflow:hidden;touch-action:pan-y}
+#kitchen3DCanvas{display:block;width:100%;height:100%;outline:none}
+.kitchen3d-status{position:absolute;top:10px;left:10px;max-width:75%;padding:7px 10px;background:rgba(15,39,69,.82);color:#fff;border-radius:8px;font-size:12px;pointer-events:none}
+.kitchen3d-controls{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.kitchen3d-controls button{background:rgba(255,255,255,.94);color:#17314d;border:1px solid #aab7c5;border-radius:9px;padding:9px 12px;font-weight:800;box-shadow:0 2px 8px #0002}
+.kitchen3d-caption{font-size:12px;color:#64748b;margin-top:8px}
+@media(max-width:620px){.kitchen3d-wrap{height:360px}.kitchen3d-controls button{font-size:12px;padding:8px 9px}}
+</style>
+
+
+<style>
+/* 觸控友善、可直接移植至手機 WebView 的原生 HTML 色票；不依賴桌面下拉選單 */
+.k3d-floor-style-control{margin:12px 0;max-width:720px;padding:12px;border:1px solid #d6deea;border-radius:12px;background:#f8fafc}
+.k3d-floor-style-control>label{display:block;margin:0 0 10px;font-weight:900;color:#173f68;font-size:14px}
+.k3d-floor-swatches{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.k3d-floor-swatch{display:flex;align-items:center;justify-content:center;gap:9px;min-width:0;min-height:52px;padding:10px 12px;border:2px solid #cbd5e1;border-radius:12px;background:#fff;color:#1f2937;font:inherit;font-weight:800;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:border-color .12s,box-shadow .12s,background .12s}
+.k3d-floor-swatch[aria-pressed="true"]{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 2px #2563eb20}
+.k3d-floor-swatch:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}
+.k3d-floor-swatch .floor-color-chip{flex:0 0 26px;width:26px;height:26px;border:1px solid #64748b55;border-radius:7px;box-shadow:inset 0 0 0 1px #ffffff22}
+.k3d-floor-swatch .floor-color-name{font-size:14px;white-space:nowrap}
+.k3d-floor-style-control .k3d-inline-help{margin-bottom:0}
+@media(max-width:620px){.k3d-floor-style-control{padding:10px}.k3d-floor-swatches{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.k3d-floor-swatch{min-height:54px;padding:10px;justify-content:flex-start}.k3d-floor-swatch .floor-color-name{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.k3d-floor-swatch{transition:none}}
+</style>
+
+
+<meta name="description" content="呈盛大板 3D 石材設計與配料模擬器。配料計算、排板、廚具 3D 預覽共用資料。">
+<meta name="application-name" content="呈盛大板3D模擬器">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="呈盛大板3D">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+
+
+
+<style id="pc-layout-enhancements">
+@media (min-width:721px){
+  body{font-size:15px;}
+  main{max-width:1680px!important;width:100%!important;margin:0 auto!important;padding:20px clamp(18px,2.3vw,38px) 38px!important;}
+  body>nav{max-width:1680px;margin:0 auto;position:sticky;top:0;z-index:100;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px clamp(18px,2.3vw,38px);box-shadow:0 2px 8px #00000008;}
+  body>nav button{font-size:14px;padding:13px 10px;min-height:46px;}
+  .card{padding:20px;margin-bottom:16px;border-radius:16px;}
+  .page-head{padding:22px 24px;}
+  .page-head h2{font-size:23px;}
+  .grid{gap:14px;}
+  .kitchen3d-wrap{height:min(70vh,800px)!important;min-height:560px!important;max-height:800px!important;}
+  .kitchen3d-controls button{font-size:13px;padding:10px 14px;min-height:42px;}
+  input,select,textarea{font-size:16px;}
+}
+@media(min-width:1300px){
+  .pattern-grid{grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);}
+}
+</style>
+
+<meta name="theme-color" content="#111827">
+<meta name="application-name" content="呈盛大板3D模擬器">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="呈盛大板3D">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
+</head>
+<style>
+/* Split app navigation */
+.split-app-title{padding:14px 16px;font-size:20px;font-weight:800;background:#0f2745;color:#fff}
+.split-app-sub{padding:0 16px 14px;background:#0f2745;color:#dbe7f5;font-size:13px}
+body{padding-top:0!important}
+@media(max-width:620px){header{display:none!important}}
+
+.k3d-config-card .k3d-sourcebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.k3d-tag{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:#eaf2ff;color:#184c99;font-size:12px;font-weight:900}
+.k3d-config-card h3{font-size:14px;margin:14px 0 8px;color:#172033}
+.k3d-checkgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.k3d-checkgrid label{display:flex;align-items:center;gap:8px;min-height:42px;padding:8px 10px;margin:0;border:1px solid #d6deea;border-radius:10px;background:#fff;color:#172033;font-size:13px;font-weight:700}
+.k3d-checkgrid input{width:18px;height:18px;accent-color:#2563eb;flex:0 0 auto}
+.k3d-layout-equipment-list{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:8px 0 12px}
+.k3d-layout-equipment{border:1px solid #d6deea;border-radius:12px;background:#f8fafc;padding:10px}
+.k3d-layout-heading{display:flex;align-items:center;gap:9px;margin:0 0 9px!important;padding:3px 2px;color:#173f68;font-size:14px;font-weight:900}
+.k3d-layout-heading input{width:20px;height:20px;accent-color:#2563eb;flex:0 0 auto}
+.k3d-equipment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.k3d-equipment-grid label,.k3d-standalone-grid-toggle label{display:flex;align-items:center;gap:7px;min-height:42px;padding:8px 9px;margin:0;border:1px solid #d6deea;border-radius:9px;background:#fff;color:#172033;font-size:12px;font-weight:700}
+.k3d-equipment-grid input,.k3d-standalone-grid-toggle input{width:18px;height:18px;accent-color:#2563eb;flex:0 0 auto}
+.k3d-standalone-grid-toggle{margin:12px 0;display:flex;justify-content:flex-start}
+.k3d-standalone-grid-toggle label{min-width:160px;font-weight:900}
+.k3d-config-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.slab-param-grid{grid-template-columns:minmax(0,1fr)}
+.slab-param-grid select{width:100%;min-width:0}
+@media(max-width:720px){.slab-param-grid{grid-template-columns:minmax(0,1fr)}}
+.k3d-config-grid select,.k3d-config-grid input{width:100%;min-width:0}
+.cabinet-color-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px}
+.k3d-inline-help{font-size:12px;color:#64748b;line-height:1.55;margin:8px 0 0}
+.k3d-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.k3d-tools button{min-height:42px;padding:9px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:10px;font-weight:800;touch-action:manipulation}
+#kitchen3DCanvas{touch-action:none}
+@media(max-width:720px){.k3d-checkgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.k3d-config-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.k3d-tools button{flex:1 1 calc(50% - 8px);min-height:44px}.kitchen3d-wrap{height:48vh!important;min-height:320px!important;max-height:520px!important}.k3d-checkgrid label{font-size:12px;padding:8px;min-height:44px}.k3d-equipment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.k3d-equipment-grid label{min-height:44px;padding:8px;font-size:12px}}
+@media(max-width:390px){.k3d-config-grid{grid-template-columns:1fr}}
+</style><body>
+<div id="calcLoading"><div class="loading-box layout-loading-box"><div class="spinner"></div><div id="loadingTitle" class="loading-text">正在計算中…</div><div id="calcProgressBar" class="progress-track"><div id="calcProgressBarInner" class="progress-bar"></div></div><div id="loadingProgress" class="loading-progress">準備開始</div><div id="loadingEta" class="loading-eta">預估剩餘時間：計算中…</div></div></div>
+<header style="display:none!important"></header>
+<div class="split-app-title">呈盛大板 3D 模擬器</div><div class="split-app-sub">配料為主要資料來源｜石材 3D 模擬｜手機／電腦共用核心｜版本 2.12</div><nav><button class="active" data-page="pattern">配料計算</button><button class="" data-page="kitchenPrompt">3D 模擬器</button><button class="" data-page="history">紀錄</button></nav>
+<div class="app-bottom-nav" id="appBottomNav">
+  <button class="app-tab active" data-page="pattern"><span class="txt">配料計算</span></button><button class="app-tab " data-page="kitchenPrompt"><span class="txt">3D 模擬器</span></button><button class="app-tab " data-page="history"><span class="txt">紀錄</span></button>
+</div>
+<main>
+<section id="pattern" class="page active">
+  <div class="pattern-hero">
+    <h2>🪨 配料計算</h2>
+    <p>依「排版規則」選擇最省材料或初步對紋對花；套圖檔作為原板花紋來源，並保留配料在原板上的相對座標。</p>
+  </div>
+
+  <div class="pattern-grid">
+    <div class="card">
+      <h2>① 上傳大板套圖檔</h2>
+      <label class="pattern-upload" for="patternImageInput">
+        <span class="upload-btn">⬆ 上傳大板套圖檔</span>
+        <div class="formula" style="margin-top:8px">支援 JPG / PNG；建議使用正面完整大板照片，花紋方向由圖片決定。</div>
+        <input id="patternImageInput" type="file" accept="image/*">
+      </label>
+      <div class="pattern-preview" id="patternImagePreview"><div class="empty">尚未上傳大板套圖檔</div></div>
+
+      <div class="pattern-rule-box">
+        <div class="pattern-rule-title">排版規則</div>
+        <div class="pattern-rule-control">
+          <select id="vRule" onchange="updatePatternRuleHint()">
+            <option value="material">最省材料</option>
+            <option value="pattern" selected>初步對紋對花</option>
+          </select>
+        </div>
+        <div class="rule-hint" id="vRuleHint">初步對紋對花：以紋路連續、方向固定、對花與加工安全為優先，再比較大板數量與利用率。</div>
+        <div class="notice" id="patternRuleNotice">核心原則：先滿足紋路方向與可接續性，再比較大板數量與利用率。備註可填可不填；例如「桌面」「前立面」「左側板」。系統會依備註中的區域、紋路、對花、45度斜拼與關聯資訊盡可能套用排版規則。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>② 排版參數設定</h2>
+      <div class="grid slab-param-grid">
+        
+<div class="full slab-brand-field">
+  <label>品牌／規格</label>
+  <select onchange="applySlabBrandSize(this.value,'pattern')">
+    <option value="">請選擇品牌／規格</option>
+    <option value="vicostone330x165">vicostone｜330 × 165 cm</option>
+    <option value="vicostone300x140">vicostone｜300 × 140 cm</option>
+    <option value="LEVEL320x160">LEVEL｜320 × 160 cm</option>
+    <option value="MDi320x160">MDi｜320 × 160 cm</option>
+  </select>
+</div>
+
+        <div><label>大板長度（cm）</label><input id="vL" type="number" placeholder="0"><div class="input-help-hint">輸入後自動檢查</div></div>
+        <div><label>大板深度（cm）</label><input id="vD" type="number" placeholder="0"><div class="input-help-hint">輸入後自動檢查</div></div>
+        <div class="full"><label for="main3d-thickness">板材厚度（cm）</label><select id="main3d-thickness"><option value="0.6">0.6</option><option value="1.2" selected>1.2</option><option value="1.5">1.5</option><option value="2">2</option><option value="3">3</option></select><div class="input-help-hint">預設 1.2 cm；用於 3D 模型厚度示意</div></div>
+        <div><label>鋸縫寬度（cm）</label><input id="vKerf" type="number" step="0.1" placeholder="0.4"><div class="input-help-hint">輸入後自動檢查</div></div>
+        <div><label>四周修邊（cm）</label><input id="vTrim" type="number" step="0.1" placeholder="0"><div class="input-help-hint">輸入後自動檢查</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>③ 輸入配料尺寸</h2><div class="notice">材料備註會決定 3D 模型中的檯面、側落板與美背位置。完成排版後可在「即時 3D 廚房模型」逐片調整方向，模型會同步更新。</div>
+    <div style="overflow:auto">
+      <table class="pattern-table">
+        <thead><tr><th>項次</th><th>位置</th><th>長度</th><th>深度</th><th>數量</th><th>允許旋轉</th></tr></thead>
+        <tbody id="patternRows"></tbody>
+      </table>
+    </div>
+    <button class="add-piece" type="button" onclick="addPatternRow()">＋ 新增配料</button>
+<button class="primary" onclick="if(validatePattern())runCalc(calcPatternLayout)">開始花紋排版</button>
+  </div>
+
+  <div id="patternOut"></div>
+<div id="patternTransferAction" class="card" style="display:none"><h2>④ 將已排版材料帶入廚房示意</h2><p class="formula">使用目前完成的排版結果，將每件材料尺寸、備註名稱、旋轉狀態及大板編號帶到「廚房示意」。</p><button type="button" class="primary" onclick="sendPatternMaterialsToKitchen()">🏡 送入廚房示意</button></div>
+<div id="patternCaseOut"></div>
+
+<div class="standard-card" id="patternEditorCard" style="display:none">
+ <div class="page-head"><div><h3>🛠️ 手動調整配料</h3><p>自動排版後，可直接拖曳、旋轉、跨大板移動，最後檢查並匯出 DXF。</p></div></div>
+ <div class="editor-toolbar">
+  <button class="editor-btn" onclick="patternEditorRotate()">🔄 旋轉</button>
+  <button class="editor-btn" onclick="patternEditorMoveBoard(-1)">⬅ 上一片</button>
+  <button class="editor-btn" onclick="patternEditorMoveBoard(1)">➡ 下一片</button>
+  <button class="editor-btn" onclick="patternEditorToggleLock()">🔒 鎖定</button>
+  <button class="editor-btn" onclick="patternEditorUndo()">↩ 復原</button>
+  <button class="editor-btn" onclick="patternEditorRedo()">↪ 重做</button>
+  <button class="editor-btn primary" onclick="patternEditorCheck()">✓ 排版檢查</button>
+  <button class="editor-btn warn" onclick="exportDXF('pattern')">📐 匯出 DXF</button>
+ </div>
+ <div class="board-editor-wrap"><div id="patternEditorRoot"></div></div>
+ <div class="editor-sidepanel"><div class="editor-info" id="patternEditorSelectedInfo">尚未選取配料</div><div class="editor-info" id="patternEditorBoardInfo">尚未建立手動排版</div></div>
+ <div class="editor-help">👆 手機直接拖曳配料；點一下選取。旋轉、跨大板移動後，可重新檢查重疊、超界與加工範圍。</div>
+ <div id="patternEditorCheck" style="display:none"></div>
+ <div class="cad-export-box"><b>📐 DXF 會包含：</b> 大板外框、裁切線、配料名稱、尺寸、大板編號；花紋版另外輸出紋路方向線。</div>
+</div>
+
+<div class="line-share-wrap"><button type="button" class="line-share-btn" onclick="sharePatternCaseToLine()"><svg class="line-svg-icon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="#06C755"/><path fill="#fff" d="M25.4 14.6c0-4.6-4.2-8.3-9.4-8.3s-9.4 3.7-9.4 8.3c0 4.1 3.4 7.5 8 8.2.3.1.7.2.8.5.1.3.1.7 0 1.2l-.1.7c0 .2-.2.9.8.5s5.3-3.1 7.2-5.3c1.3-1.5 2.1-3.4 2.1-5.8Zm-12.8 2.5H10a.6.6 0 0 1-.6-.6v-4.1c0-.3.3-.6.6-.6s.6.3.6.6v3.5h2c.3 0 .6.3.6.6s-.3.6-.6.6Zm2.1-.6c0 .3-.3.6-.6.6s-.6-.3-.6-.6v-4.1c0-.3.3-.6.6-.6s.6.3.6.6v4.1Zm4.5 0c0 .3-.2.5-.5.6h-.2c-.2 0-.4-.1-.5-.3l-2.1-2.8v2.5c0 .3-.3.6-.6.6s-.6-.3-.6-.6v-4.1c0-.3.2-.5.5-.6h.2c.2 0 .4.1.5.3l2.1 2.8v-2.5c0-.3.3-.6.6-.6s.6.3.6.6v4.1Zm3.5-3.5h-2v1.1h1.7c.3 0 .6.3.6.6s-.3.6-.6.6h-1.7v1.1h2c.3 0 .6.3.6.6s-.3.6-.6.6h-2.6a.6.6 0 0 1-.6-.6v-4.1c0-.3.3-.6.6-.6h2.6c.3 0 .6.3.6.6s-.3.6-.6.6Z"/></svg><span>下載解說圖並傳送 LINE</span></button></div>
+</section><section id="history" class="page">
+<div class="page-head"><h2>📚 紀錄查詢</h2><p>使用下拉選單分開查詢不同功能的歷史紀錄，不混合呈現。</p></div>
+<div class="card standard-card"><h2>① 選擇查詢項目</h2>
+<div class="grid">
+<div class="full"><label>查詢項目</label><select id="hType" onchange="renderHistory()"><option value="">請選擇要查詢的紀錄</option><option value="排版">配料</option><option value="花紋版">花紋</option></select></div>
+<div class="full"><label>搜尋</label><input id="hSearch" oninput="renderHistory()" placeholder="搜尋尺寸、結果、品牌、備註"></div>
+<div style="display:flex;align-items:end;gap:8px"><button class="secondary" onclick="clearHistory()">清除全部紀錄</button></div>
+</div><div id="historyList"></div>
+<div class="line-share-wrap"><button type="button" class="line-share-btn" onclick="shareHistoryLine()"><svg class="line-svg-icon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="#06C755"/><path fill="#fff" d="M25.4 14.6c0-4.6-4.2-8.3-9.4-8.3s-9.4 3.7-9.4 8.3c0 4.1 3.4 7.5 8 8.2.3.1.7.2.8.5.1.3.1.7 0 1.2l-.1.7c0 .2-.2.9.8.5s5.3-3.1 7.2-5.3c1.3-1.5 2.1-3.4 2.1-5.8Zm-12.8 2.5H10a.6.6 0 0 1-.6-.6v-4.1c0-.3.3-.6.6-.6s.6.3.6.6v3.5h2c.3 0 .6.3.6.6s-.3.6-.6.6Zm2.1-.6c0 .3-.3.6-.6.6s-.6-.3-.6-.6v-4.1c0-.3.3-.6.6-.6s.6.3.6.6v4.1Zm4.5 0c0 .3-.2.5-.5.6h-.2c-.2 0-.4-.1-.5-.3l-2.1-2.8v2.5c0 .3-.3.6-.6.6s-.6-.3-.6-.6v-4.1c0-.3.2-.5.5-.6h.2c.2 0 .4.1.5.3l2.1 2.8v-2.5c0-.3.3-.6.6-.6s.6.3.6.6v4.1Zm3.5-3.5h-2v1.1h1.7c.3 0 .6.3.6.6s-.3.6-.6.6h-1.7v1.1h2c.3 0 .6.3.6.6s-.3.6-.6.6h-2.6a.6.6 0 0 1-.6-.6v-4.1c0-.3.3-.6.6-.6h2.6c.3 0 .6.3.6.6s-.3.6-.6.6Z"/></svg><span>一鍵產生 LINE 訊息</span></button></div></div>
+</section>
+
+<section id="kitchenPrompt" class="page">
+  <div class="pattern-hero">
+    <h2>🏡 大板配圖 3D 模擬器</h2>
+    <div class="notice">配料計算與即時 3D 組裝連動；本模型為設計／尺寸核對示意，不能直接取代施工 CAD 圖。</div>
+    <p>3D 畫面可旋轉、平移、縮放並切換檯面型式；有已排版材料時，板件尺寸、方向與位置分類以配料資料為主。尚未匯入材料時才顯示預設尺寸草稿，不會直接當成正式配料。</p>
+  </div>
+  <div class="card kitchen-prompt-card k3d-config-card" id="main3dConfigCard">
+    <h2>① 配置、櫃體顏色與廚具顯示</h2>
+    <div class="k3d-sourcebar"><span class="k3d-tag">配料計算為主要資料來源</span><span class="formula" id="main3dSourceStatus">尚未匯入配料：顯示預設尺寸草稿；完成配料後以配料資料組裝。</span></div>
+    <h3>檯面型式與配件顯示</h3>
+    <div class="k3d-layout-equipment-list" id="main3dLayoutEquipment">
+      <section class="k3d-layout-equipment">
+        <label class="k3d-layout-heading"><input type="checkbox" id="main3d-show-straight" checked>一字型</label>
+        <div class="k3d-equipment-grid">
+          <label><input type="checkbox" id="main3d-equip-straight-sink" checked>水槽</label>
+          <label><input type="checkbox" id="main3d-equip-straight-faucet" checked>水龍頭</label>
+          <label><input type="checkbox" id="main3d-equip-straight-stove" checked>瓦斯爐</label>
+          <label><input type="checkbox" id="main3d-equip-straight-dishwasher" checked>洗碗機</label>
+          <label><input type="checkbox" id="main3d-equip-straight-upper" checked>吊櫃</label>
+          <label><input type="checkbox" id="main3d-equip-straight-lower" checked>下櫃</label>
+        </div>
+      </section>
+      <section class="k3d-layout-equipment">
+        <label class="k3d-layout-heading"><input type="checkbox" id="main3d-show-L">L 型</label>
+        <div class="k3d-equipment-grid">
+          <label><input type="checkbox" id="main3d-equip-l-sink" checked>水槽</label>
+          <label><input type="checkbox" id="main3d-equip-l-faucet" checked>水龍頭</label>
+          <label><input type="checkbox" id="main3d-equip-l-stove" checked>瓦斯爐</label>
+          <label><input type="checkbox" id="main3d-equip-l-dishwasher" checked>洗碗機</label>
+          <label><input type="checkbox" id="main3d-equip-l-upper" checked>吊櫃</label>
+          <label><input type="checkbox" id="main3d-equip-l-lower" checked>下櫃</label>
+        </div>
+      </section>
+      <section class="k3d-layout-equipment">
+        <label class="k3d-layout-heading"><input type="checkbox" id="main3d-show-U">ㄇ字型</label>
+        <div class="k3d-equipment-grid">
+          <label><input type="checkbox" id="main3d-equip-u-sink" checked>水槽</label>
+          <label><input type="checkbox" id="main3d-equip-u-faucet" checked>水龍頭</label>
+          <label><input type="checkbox" id="main3d-equip-u-stove" checked>瓦斯爐</label>
+          <label><input type="checkbox" id="main3d-equip-u-dishwasher" checked>洗碗機</label>
+          <label><input type="checkbox" id="main3d-equip-u-upper" checked>吊櫃</label>
+          <label><input type="checkbox" id="main3d-equip-u-lower" checked>下櫃</label>
+        </div>
+      </section>
+      <section class="k3d-layout-equipment">
+        <label class="k3d-layout-heading"><input type="checkbox" id="main3d-show-island" checked>中島</label>
+        <div class="k3d-equipment-grid">
+          <label><input type="checkbox" id="main3d-equip-island-sink" checked>水槽</label>
+          <label><input type="checkbox" id="main3d-equip-island-faucet" checked>水龍頭</label>
+          <label><input type="checkbox" id="main3d-equip-island-stove" checked>瓦斯爐</label>
+          <label><input type="checkbox" id="main3d-equip-island-dishwasher" checked>洗碗機</label>
+          <label><input type="checkbox" id="main3d-equip-island-upper">吊櫃（選用）</label>
+          <label><input type="checkbox" id="main3d-equip-island-lower" checked>下櫃</label>
+        </div>
+      </section>
+    </div>
+    <div class="k3d-floor-style-control">
+      <label id="main3d-floor-style-label">地板顏色（單色系）</label>
+      <input type="hidden" id="main3d-floor-style" value="gray">
+      <div class="k3d-floor-swatches" role="group" aria-labelledby="main3d-floor-style-label">
+        <button type="button" class="k3d-floor-swatch" data-floor-tone="gray" aria-pressed="true" aria-label="地板顏色：灰色">
+          <span class="floor-color-chip" style="background:#aeb4ba" aria-hidden="true"></span><span class="floor-color-name">灰</span>
+        </button>
+        <button type="button" class="k3d-floor-swatch" data-floor-tone="white" aria-pressed="false" aria-label="地板顏色：白色">
+          <span class="floor-color-chip" style="background:#f4f4f1" aria-hidden="true"></span><span class="floor-color-name">白</span>
+        </button>
+        <button type="button" class="k3d-floor-swatch" data-floor-tone="black" aria-pressed="false" aria-label="地板顏色：黑色">
+          <span class="floor-color-chip" style="background:#292d30" aria-hidden="true"></span><span class="floor-color-name">黑</span>
+        </button>
+        <button type="button" class="k3d-floor-swatch" data-floor-tone="brown" aria-pressed="false" aria-label="地板顏色：棕色">
+          <span class="floor-color-chip" style="background:#76543e" aria-hidden="true"></span><span class="floor-color-name">棕</span>
+        </button>
+      </div>
+      <p class="k3d-inline-help">單色地板只影響 3D 場景地面，不會覆蓋已上傳的大板圖片，也不會修改 5.22B 配料資料。手機上採用 2×2 大按鈕，方便手指點選；寬螢幕則並排顯示。</p>
+    </div>
+    <h3>吊櫃／下櫃顏色</h3>
+    <div class="k3d-config-grid cabinet-color-grid" style="margin-top:8px">
+      <div><label for="main3d-upper-color">吊櫃顏色</label><select id="main3d-upper-color"><option value="#f3f1eb">暖白色</option><option value="#d5d8dc">淺灰色</option><option value="#51565d">深灰色</option><option value="#b58a62">淺木色</option><option value="#76543e">胡桃木色</option><option value="#34483e">墨綠色</option><option value="#202329">黑色</option></select></div>
+      <div><label for="main3d-lower-color">下櫃顏色</label><select id="main3d-lower-color"><option value="#f3f1eb">暖白色</option><option value="#d5d8dc">淺灰色</option><option value="#51565d">深灰色</option><option value="#b58a62">淺木色</option><option value="#76543e">胡桃木色</option><option value="#34483e">墨綠色</option><option value="#202329">黑色</option></select></div>
+    </div>
+    <p class="k3d-inline-help">四種型式的水槽、水龍頭、瓦斯爐、洗碗機、吊櫃與下櫃分別控制。石材板件尺寸、方向與位置仍以 5.22B 配料結果為準；顏色選項不會覆蓋上傳的大板套圖。</p>
+  </div>
+  <div class="card kitchen-prompt-card">
+    <h2>② 即時 3D 模型預覽</h2>
+    <p class="formula">模型依配料備註建立牆面板、中島檯面、L 型／ㄇ字型轉角、側落板與美背立面；尺寸依公分等比例換算。每片材料可在下方清單選擇 0°／90°／180°／270°，3D 模型即時更新。這是比例示意，施工位置仍需核對。</p>
+    <div id="kitchen3DWrap" class="kitchen3d-wrap">
+      <canvas id="kitchen3DCanvas" aria-label="可互動的 3D 廚房模型"></canvas>
+      <div id="kitchen3DStatus" class="kitchen3d-status">正在建立 3D 模型…</div>
+      <div class="kitchen3d-controls">
+        <button type="button" onclick="resetKitchen3DView()">⟳ 重設視角</button>
+        <button type="button" onclick="fitKitchen3DView()">全模型取景</button>
+        <button type="button" onclick="toggleKitchen3DAutoRotate()" id="kitchen3DRotateBtn">▶ 自動旋轉</button>
+      </div>
+    </div>
+    <div class="kitchen3d-caption">操作方式：模型可自由旋轉：滑鼠左鍵拖曳旋轉、右鍵拖曳平移、滾輪縮放；手機單指旋轉、雙指縮放／平移。縮放範圍 100%～260%。</div><div id="kitchen3DMaterialStatus" class="notice" style="margin-top:10px">尚未匯入配料；完成排版並送入廚房示意後，會依尺寸將材料區塊映射到 3D 檯面／立面。</div>
+  </div>
+  <div class="card kitchen-prompt-card" id="kitchenImportedCard">
+    <h2>② 配料材料與逐片方向</h2>
+    <p class="formula">在「配料計算」完成排版後，按「送入廚房示意」。每件材料的方向可獨立調整，模型會即時更新；方向只控制 3D 示意，不會改動原始大板排版結果。</p>
+    <div id="kitchenImportedMaterials"><div class="empty">尚未匯入材料。請先完成配料計算。</div></div>
+    <button type="button" class="primary" onclick="go('pattern')">返回配料計算</button>
+  </div>
+
+
+</section>
+
+</main>
+<script>
+function fmt(value,max=2){
+  if(value===null||value===undefined||Number.isNaN(Number(value))) return '';
+  const num=Number(value);
+  if(Math.abs(num)<1e-12) return '0';
+  return num.toLocaleString('zh-TW',{minimumFractionDigits:0,maximumFractionDigits:max});
+}
+
+const KEY='vicostoneSlabCalcV3';
+let history=JSON.parse(localStorage.getItem(KEY)||'[]');
+const n=id=>parseFloat(document.getElementById(id).value)||0;
+const money=x=>Math.round(x).toLocaleString('zh-TW');
+function save(){localStorage.setItem(KEY,JSON.stringify(history));renderHistory()}
+function addHistory(type,title,data,result){history.unshift({id:Date.now()+Math.random(),time:new Date().toLocaleString('zh-TW'),type,title,data,result});save()}
+
+function nLoss(id){return Number(document.getElementById(id).value)}
+function fmtLoss(x){return x.toFixed(2).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1').replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function calcLossOriginal(){
+  const len=nLoss('len');
+  const unit=nLoss('unit');
+  const rate=nLoss('lossRate');
+  const sale=nLoss('sale');
+
+  if(!len || !unit || !sale || isNaN(rate) || rate<0 || rate>100){
+    return alert('請輸入正確數字，損耗率請輸入 0～100');
+  }
+
+  // 1. 總長度 = 材料長度 × 2
+  const v1=len*2;
+  // 2. 每片收益 = 第1項 × 單價
+  const v2=v1*unit;
+  // 3. 收益損耗 = 第2項 × (1-損耗率)
+  const v3=v2*(1-rate/100);
+  // 4. 板材占比 = 板材售價 ÷ 第3項
+  const v4=v3 ? sale/v3 : 0;
+  // 5. 加工實際收益 = 第3項 − 板材售價
+  const v5=v3-sale;
+  // 6. 每公分代工費 = 收益損耗 ÷ 總長度
+  const v6=v3/v1;
+
+  document.getElementById('r1').textContent=fmt(v1);
+  document.getElementById('r2').textContent=fmt(v2);
+  document.getElementById('r3').textContent=fmt(v3);
+  document.getElementById('r4').textContent=fmt(v4*100);
+  document.getElementById('r5').textContent=fmt(v5);
+  document.getElementById('r6').textContent=fmt(v6);
+
+  document.getElementById('detail').textContent=
+    `① ${fmt(len)} × 2 = ${fmt(v1)}　② ${fmt(v1)} × ${fmt(unit)} = ${fmt(v2)}　③ ${fmt(v2)} × (1-${fmt(rate)}%) = ${fmt(v3)}　④ ${fmt(sale)} ÷ ${fmt(v3)} = ${fmt(v4*100)}%　⑤ ${fmt(v3)} − ${fmt(sale)} = ${fmt(v5)}　⑥ ${fmt(v3)} ÷ ${fmt(v1)} = ${fmt(v6)} 元/cm`;
+
+  addHistory('損耗','',{len,unit,rate,sale},
+    `第3項 $${fmt(v3)}／板材占比 ${fmt(v4*100)}%／加工實際收益 $${fmt(v5)}／代工費 ${fmt(v6)}元/cm`);
+}
+function clearLossOriginal(){
+ ['len','unit','lossRate','sale'].forEach(id=>document.getElementById(id).value='');
+ ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='—');
+ document.getElementById('detail').textContent='輸入資料後按「計算」';
+}
+
+function applyBrandSize(){
+ const sizes={
+  vicostone330x165:[330,165],
+  vicostone300x140:[300,140],
+  LEVEL320x160:[320,160],
+  inalco320x160:[320,160]
+ };
+ const v=document.getElementById('rBrand').value;
+ const pair=sizes[v];
+ document.getElementById('rL').value=pair?pair[0]:'';
+ document.getElementById('rD').value=pair?pair[1]:'';
+}
+function calcRemnant(){
+ const price=n('rPrice'),L=n('rL'),D=n('rD'),rl=n('rRL'),rd=n('rRD');
+ if(!price||!L||!D||!rl||!rd)return alert('請輸入大板價格與完整尺寸');
+ const area=L*D/10000, rem=rl*rd/10000, pricePerM2=price/area, val=pricePerM2*rem, cai=rem/(0.303*0.303);
+ document.getElementById('rOut').innerHTML=`<div class="result"><div class="big">$${money(val)}</div><div class="row"><span>大板面積</span><b>${fmt(area)} m²</b></div><div class="row"><span>餘料面積</span><b>${fmt(rem)} m²</b></div><div class="row"><span>餘料才數</span><b>${fmt(cai)} 才</b></div><div class="row"><span>佔原板材比例</span><b>${fmt(rem/area*100)}%</b></div></div>`;
+ const brand=document.getElementById('rBrand').selectedOptions[0]?.text || '';
+ addHistory('餘料',brand,{price,L,D,rl,rd},`${fmt(cai)}才／$${money(val)}`);
+}
+function calcLoss(){
+ const len=n('lLen'),unit=n('lUnit'),rate=n('lRate')/100,board=n('lBoard');
+ const total=len*2, revenue=(len/100)*unit, loss=revenue*rate, ratio=loss?board/loss*100:0, actual=loss-board;
+ document.getElementById('lOut').innerHTML=`<div class="result"><div class="row"><span>① 總長度</span><b>${total.toFixed(2)}</b></div><div class="row"><span>② 每片收益</span><b>$${money(revenue)}</b></div><div class="row"><span>③ 收益損耗</span><b>$${money(loss)}</b></div><div class="row"><span>④ 板材占比</span><b>${ratio.toFixed(2)}%</b></div><div class="row"><span>⑤ 加工實際收益</span><b>$${money(actual)}</b></div></div>`;
+ addHistory('損耗','',{len,unit,rate,board},`加工實際收益 $${money(actual)}`);
+}
+function calcQuote(){
+ const p=n('qPrice'),cost=n('qBoard')+n('qProcess')+n('qShip')+n('qOther'),profit=p-cost,margin=p?profit/p*100:0;
+ document.getElementById('qOut').innerHTML=`<div class="result"><div class="big">$${money(profit)}</div><div class="row"><span>總成本</span><b>$${money(cost)}</b></div><div class="row"><span>毛利率</span><b>${margin.toFixed(2)}%</b></div></div>`;
+ addHistory('報價','報價／毛利',{price:p,board:n('qBoard'),process:n('qProcess'),ship:n('qShip'),other:n('qOther')},`毛利 $${money(profit)}／${margin.toFixed(2)}%`);
+}
+
+let extraPieceCount=0;
+function addPiece(){
+ const container=document.getElementById('piecesContainer');
+ extraPieceCount++;
+ const letter=String.fromCharCode('F'.charCodeAt(0)+extraPieceCount-1);
+ const row=document.createElement('div');
+ row.className='piece-row'; row.dataset.piece=letter;
+ row.innerHTML=`<div class="piece-title">配料 ${letter}</div>
+ <div><label>長（cm）</label><input id="${letter.toLowerCase()}L" type="number" placeholder="0"></div>
+ <div><label>深（cm）</label><input id="${letter.toLowerCase()}D" type="number" placeholder="0"></div>
+`;
+ container.appendChild(row);
+ // Keep the add button at the end of the list.
+ container.appendChild(document.getElementById('addPieceBtn'));
+}
+function setCalcProgress(done,total,startTime){
+ const bar=document.getElementById('calcProgressBar');
+ const progress=document.getElementById('loadingProgress');
+ const eta=document.getElementById('loadingEta');
+ const pct=total?Math.min(100,done/total*100):0;
+ bar.style.width=pct.toFixed(1)+'%';
+ progress.textContent=`排版計算 ${done} / ${total}（${Math.round(pct)}%）`;
+ if(done<=0){
+   eta.textContent='預估剩餘時間：計算中…';
+   return;
+ }
+ const elapsed=(performance.now()-startTime)/1000;
+ const remain=Math.max(0,elapsed/done*(total-done));
+ if(remain<0.8) eta.textContent='預估剩餘時間：即將完成';
+ else eta.textContent=`預估剩餘時間：約 ${remain<10?remain.toFixed(1):Math.ceil(remain)} 秒`;
+}
+function resetCalcProgress(){
+ const bar=document.getElementById('calcProgressBar');
+ const progress=document.getElementById('loadingProgress');
+ const eta=document.getElementById('loadingEta');
+ if(bar) bar.style.width='0%';
+ if(progress) progress.textContent='準備開始';
+ if(eta) eta.textContent='預估剩餘時間：計算中…';
+}
+function runCalc(fn){
+ const overlay=document.getElementById('calcLoading');
+ resetCalcProgress();
+ overlay.classList.add('show');
+ setTimeout(()=>{
+   Promise.resolve().then(()=>fn()).finally(()=>{
+     setTimeout(()=>overlay.classList.remove('show'),220);
+   });
+ },80);
+}
+function pieces(){
+ const rows=[...document.querySelectorAll('#piecesContainer .piece-row')];
+ return rows.map(row=>{
+   const name=row.dataset.piece;
+   const L=document.getElementById(name.toLowerCase()+'L');
+   const D=document.getElementById(name.toLowerCase()+'D');
+   return {name,w:parseFloat(L?.value)||0,h:parseFloat(D?.value)||0};
+ }).filter(x=>x.w>0&&x.h>0);
+}
+
+/* 依輸入順序排版：
+   每片板材一開始只有一個完整可用矩形。
+   每放一件配料，就把被占用的矩形切成右側/下側剩餘空間，
+   並在每次放置時比較原方向與旋轉方向，選擇較合適的方向。
+   若目前所有剩餘矩形都放不下，就開下一片完整大板。 */
+function packSequential(W,H,items){
+ let sheets=[];
+ function newSheet(){ return {free:[{x:0,y:0,w:W,h:H}],parts:[]}; }
+ function placeOnSheet(sheet,item){
+   let candidates=[];
+   sheet.free.forEach((r,ri)=>{
+     for(const rot of [false,true]){
+       const w=rot?item.h:item.w, h=rot?item.w:item.h;
+       if(w<=r.w && h<=r.h){
+         const waste=r.w*r.h-w*h;
+         candidates.push({ri,rot,w,h,x:r.x,y:r.y,waste,short:Math.min(r.w-w,r.h-h)});
+       }
+     }
+   });
+   if(!candidates.length) return false;
+   candidates.sort((a,b)=>a.waste-b.waste || a.short-b.short);
+   const c=candidates[0], r=sheet.free[c.ri];
+   sheet.parts.push({item,rot:c.rot,x:c.x,y:c.y,w:c.w,h:c.h});
+   sheet.free.splice(c.ri,1);
+
+   // Guillotine split: right side + bottom side.
+   if(r.w-c.w>0) sheet.free.push({x:r.x+c.w,y:r.y,w:r.w-c.w,h:c.h});
+   if(r.h-c.h>0) sheet.free.push({x:r.x,y:r.y+c.h,w:r.w,h:r.h-c.h});
+   // Remove contained/zero free rectangles and merge simple adjacent rectangles.
+   sheet.free=sheet.free.filter(a=>a.w>0&&a.h>0);
+   let changed=true;
+   while(changed){
+     changed=false;
+     outer: for(let i=0;i<sheet.free.length;i++){
+       for(let j=i+1;j<sheet.free.length;j++){
+         const a=sheet.free[i],b=sheet.free[j];
+         if(a.y===b.y&&a.h===b.h&&(a.x+a.w===b.x||b.x+b.w===a.x)){
+           sheet.free.splice(j,1); sheet.free[i]={x:Math.min(a.x,b.x),y:a.y,w:a.w+b.w,h:a.h}; changed=true; break outer;
+         }
+         if(a.x===b.x&&a.w===b.w&&(a.y+a.h===b.y||b.y+b.h===a.y)){
+           sheet.free.splice(j,1); sheet.free[i]={x:a.x,y:Math.min(a.y,b.y),w:a.w,h:a.h+b.h}; changed=true; break outer;
+         }
+       }
+     }
+   }
+   return true;
+ }
+ for(const item of items){
+   let placed=false;
+   for(const sheet of sheets){
+     if(placeOnSheet(sheet,item)){placed=true;break;}
+   }
+   if(!placed){
+     const sheet=newSheet();
+     if(!placeOnSheet(sheet,item)) return null;
+     sheets.push(sheet);
+   }
+ }
+ return sheets;
+}
+function drawSheet(sheet,W,H,index){
+ const max=350, scale=Math.min(max/W,max/H), sw=W*scale, sh=H*scale;
+ let s=`<div style="margin-top:16px"><b>第 ${index+1} 片大板｜${W} × ${H} cm</b>`;
+ s+=`<div class="sheet" style="width:${sw}px;height:${sh}px">`;
+ for(const p of sheet.parts){
+   s+=`<div class="piece" style="left:${p.x*scale}px;top:${p.y*scale}px;width:${p.w*scale}px;height:${p.h*scale}px">${p.item.name}<br>${p.w} × ${p.h} cm</div>`;
+ }
+ s+='</div>';
+ const remain=sheet.free.reduce((sum,r)=>sum+r.w*r.h,0);
+ s+=`<div class="formula">本片已用：${sheet.parts.reduce((sum,p)=>sum+p.w*p.h,0).toFixed(0)} cm²　剩餘可用：${remain.toFixed(0)} cm²</div></div>`;
+ return s;
+}
+async function calcLayout(){
+  const W=n('pL'), H=n('pD');
+  const kerf=Math.max(0,n('pKerf'));
+  const trim=Math.max(0,n('pTrim'));
+  const allowRotate=document.getElementById('pRotate').checked;
+  const ps=pieces();
+
+  if(!W||!H||!ps.length){
+    return alert('請輸入大板長、深，以及至少一個配料尺寸');
+  }
+
+  const usableW=W-trim*2;
+  const usableH=H-trim*2;
+  if(usableW<=0 || usableH<=0){
+    return alert('修邊後的大板可用尺寸不足，請檢查大板尺寸與修邊。');
+  }
+
+  const boardArea=usableW*usableH;
+  const items=ps.map((p,i)=>({...p,idx:i,area:p.w*p.h}))
+                 .sort((a,b)=>b.area-a.area);
+
+  function orientations(item){
+    const list=[{w:item.w,h:item.h,rot:false}];
+    if(allowRotate && Math.abs(item.w-item.h)>1e-9){
+      list.push({w:item.h,h:item.w,rot:true});
+    }
+    return list;
+  }
+
+  function placeOne(board,item){
+    let best=null;
+    for(let fi=0;fi<board.free.length;fi++){
+      const r=board.free[fi];
+      for(const o of orientations(item)){
+        // 預留右側／下側鋸縫空間，避免相鄰配料沒有裁切間隙。
+        const needW=o.w+kerf;
+        const needH=o.h+kerf;
+        if(needW>r.w+1e-9 || needH>r.h+1e-9) continue;
+        const dw=r.w-needW, dh=r.h-needH;
+        const score=[Math.min(dw,dh),Math.max(dw,dh),r.w*r.h-o.w*o.h];
+        if(!best ||
+          score[0]<best.score[0] ||
+          (score[0]===best.score[0]&&score[1]<best.score[1]) ||
+          (score[0]===best.score[0]&&score[1]===best.score[1]&&score[2]<best.score[2])){
+          best={fi,x:r.x,y:r.y,w:o.w,h:o.h,rot:o.rot,needW,needH,score};
+        }
+      }
+    }
+    return best;
+  }
+
+  function split(board,c){
+    const used={x:c.x,y:c.y,w:c.needW,h:c.needH};
+    const out=[];
+    for(const r of board.free){
+      const hit=!(used.x>=r.x+r.w-1e-9 ||
+                  used.x+used.w<=r.x+1e-9 ||
+                  used.y>=r.y+r.h-1e-9 ||
+                  used.y+used.h<=r.y+1e-9);
+      if(!hit){out.push({...r});continue;}
+
+      if(used.x>r.x+1e-9) out.push({x:r.x,y:r.y,w:used.x-r.x,h:r.h});
+      if(used.x+used.w<r.x+r.w-1e-9) out.push({x:used.x+used.w,y:r.y,w:r.x+r.w-(used.x+used.w),h:r.h});
+      if(used.y>r.y+1e-9) out.push({x:r.x,y:r.y,w:r.w,h:used.y-r.y});
+      if(used.y+used.h<r.y+r.h-1e-9) out.push({x:r.x,y:used.y+used.h,w:r.w,h:r.y+r.h-(used.y+used.h)});
+    }
+
+    const clean=[];
+    for(let i=0;i<out.length;i++){
+      const a=out[i];
+      if(a.w<=0.0001||a.h<=0.0001) continue;
+      let inside=false;
+      for(let j=0;j<out.length;j++){
+        if(i===j) continue;
+        const b=out[j];
+        if(b.x<=a.x+1e-7&&b.y<=a.y+1e-7&&
+           b.x+b.w>=a.x+a.w-1e-7&&b.y+b.h>=a.y+a.h-1e-7){
+          inside=true;break;
+        }
+      }
+      if(!inside) clean.push(a);
+    }
+    return clean;
+  }
+
+  function addItem(board,item,c){
+    return {
+      free:split(board,c),
+      placed:board.placed.concat([{
+        name:item.name,w:c.w,h:c.h,x:c.x,y:c.y,rot:c.rot,idx:item.idx
+      }])
+    };
+  }
+
+  // 不依照使用者輸入順序排版：先建立多種「自動排序」方案，
+  // 每一種方案都允許建立無限片數的大板，目標是把所有輸入配料全部放進去。
+  // 評估優先順序：1. 所有配料都成功放入 2. 使用大板片數較少 3. 利用率較高。
+  const orders=[
+    items.slice().sort((a,b)=>b.area-a.area),
+    items.slice().sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)),
+    items.slice().sort((a,b)=>Math.min(b.w,b.h)-Math.min(a.w,a.h)),
+    items.slice().sort((a,b)=>(b.w+b.h)-(a.w+a.h)),
+    items.slice().sort((a,b)=>Math.abs((b.w/b.h)-(a.w/a.h))),
+    items.slice().sort((a,b)=>b.w-a.w),
+    items.slice().sort((a,b)=>b.h-a.h),
+    items.slice().sort((a,b)=>{
+      const da=Math.max(a.w,a.h)-Math.min(a.w,a.h);
+      const db=Math.max(b.w,b.h)-Math.min(b.w,b.h);
+      return db-da;
+    }),
+    items.slice().sort((a,b)=>(b.area/a.w)-(a.area/a.w))
+  ];
+
+  const seen=new Set(), unique=[];
+  for(const o of orders){
+    const k=o.map(x=>x.idx).join(',');
+    if(!seen.has(k)){seen.add(k);unique.push(o);}
+  }
+
+  const progressTotal=Math.max(1,unique.length*items.length);
+  const progressStart=performance.now();
+  let progressDone=0;
+  setCalcProgress(0,progressTotal,progressStart);
+
+  async function runOrder(order, orderIndex){
+    const boards=[];
+    for(const item of order){
+      let bestBoard=-1,bestC=null,bestScore=null;
+
+      // 不受輸入順序限制：目前已有的每一片大板都會嘗試，
+      // 找最適合放入的位置；放不下才自動新增下一片大板。
+      for(let bi=0;bi<boards.length;bi++){
+        const c=placeOne(boards[bi],item);
+        if(!c) continue;
+        const remaining=boards[bi].free.reduce((a,r)=>a+r.w*r.h,0)-item.area;
+        // 優先塞進最適合的現有板材，降低碎料；不因輸入順序而固定使用第一片。
+        const score=[c.score[0],c.score[1],Math.max(0,remaining),bi];
+        if(!bestScore ||
+          score[0]<bestScore[0] ||
+          (score[0]===bestScore[0]&&score[1]<bestScore[1]) ||
+          (score[0]===bestScore[0]&&score[1]===bestScore[1]&&score[2]<bestScore[2]) ||
+          (score[0]===bestScore[0]&&score[1]===bestScore[1]&&score[2]===bestScore[2]&&score[3]<bestScore[3])){
+          bestBoard=bi;bestC=c;bestScore=score;
+        }
+      }
+
+      if(bestBoard>=0){
+        boards[bestBoard]=addItem(boards[bestBoard],item,bestC);
+      }else{
+        // 沒有任何既有大板放得下，就直接新增一片；不限制大板數量。
+        const nb={free:[{x:0,y:0,w:usableW,h:usableH}],placed:[]};
+        const c=placeOne(nb,item);
+        if(!c) return null;
+        boards.push(addItem(nb,item,c));
+      }
+
+      progressDone++;
+      setCalcProgress(progressDone,progressTotal,progressStart);
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    return boards;
+  }
+
+  let best=null;
+  const totalArea=items.reduce((a,x)=>a+x.area,0);
+
+  // 比較多種自動排序，但絕不以原始輸入順序作為唯一排版依據。
+  for(let oi=0;oi<unique.length;oi++){
+    const boards=await runOrder(unique[oi],oi);
+    if(!boards) continue;
+    const count=boards.length;
+    const util=totalArea/(count*boardArea);
+    const usefulRemnants=boards.reduce((sum,b)=>sum+b.free.filter(r=>r.w>=20&&r.h>=20).length,0);
+    const fragmentPenalty=boards.reduce((sum,b)=>sum+b.free.filter(r=>r.w<20||r.h<20).reduce((s,r)=>s+r.w*r.h,0),0);
+    const score={count,util,usefulRemnants,fragmentPenalty};
+    if(!best ||
+      count<best.count ||
+      (count===best.count && util>best.util) ||
+      (count===best.count && Math.abs(util-best.util)<1e-12 && usefulRemnants>best.usefulRemnants) ||
+      (count===best.count && Math.abs(util-best.util)<1e-12 && usefulRemnants===best.usefulRemnants && fragmentPenalty<best.fragmentPenalty)){
+      best={boards,count,util,usefulRemnants,fragmentPenalty};
+    }
+  }
+
+  if(!best){
+    return alert('無法排入：至少有一個配料尺寸超過修邊後大板可用範圍。');
+  }
+  window.layoutBest=best;
+
+  let out=`<div class="result"><div class="big">需要 ${best.count} 片大板</div>
+    <div class="row"><span>原始大板尺寸</span><b>${fmt(W)} × ${fmt(H)} cm</b></div>
+    <div class="row"><span>修邊後可用尺寸</span><b>${fmt(usableW)} × ${fmt(usableH)} cm</b></div>
+    <div class="row"><span>鋸縫</span><b>${fmt(kerf)} cm</b></div>
+    <div class="row"><span>配料數量</span><b>${ps.length} 件</b></div>
+    <div class="row"><span>配料總面積</span><b>${fmt(totalArea/10000)} m²</b></div>
+    <div class="row"><span>總利用率</span><b>${fmt(best.util*100)}%</b></div>
+  </div>
+  <div class="layout-score-card">
+    <div class="layout-score-item"><b>${best.count}</b><span>使用大板</span></div>
+    <div class="layout-score-item"><b>${fmt(best.util*100)}%</b><span>總利用率</span></div>
+    <div class="layout-score-item"><b>${best.usefulRemnants}</b><span>可用餘料區</span></div>
+    <div class="layout-score-item"><b>${fmt(best.fragmentPenalty/10000)} m²</b><span>碎料區</span></div>
+  </div>
+  <div class="optimization-note"><b>⚙️</b><span>5.20 排版會自動比較多組配料順序，再以「大板片數 → 利用率 → 可用餘料 → 碎料」依序挑選結果；不依照你輸入的 A、B、C 順序硬排。</span></div>`;
+
+  best.boards.forEach((b,bi)=>{
+    const used=b.placed.reduce((a,p)=>a+p.w*p.h,0);
+    const util=used/boardArea;
+    const boardPxW=Math.max(280,Math.min(760,W*2));
+    const boardPxH=Math.max(180,Math.min(430,H*2));
+
+    out+=`<div class="card" style="margin-top:14px">
+      <h3>第 ${bi+1} 片大板　利用率 ${fmt(util*100)}%</h3>
+      <div style="overflow:auto">
+        <div class="layout-board" style="position:relative;width:${boardPxW}px;height:${boardPxH}px;border:3px solid #111827;background:#f8fafc;margin:auto">
+          <div style="position:absolute;left:${trim/W*100}%;top:${trim/H*100}%;width:${usableW/W*100}%;height:${usableH/H*100}%;border:1px dashed #94a3b8;pointer-events:none"></div>
+          ${b.placed.map(p=>{
+            const left=(trim+p.x)/W*boardPxW;
+            const top=(trim+p.y)/H*boardPxH;
+            const ww=p.w/W*boardPxW;
+            const hh=p.h/H*boardPxH;
+            return `<div class="piece" style="left:${left}px;top:${top}px;width:${Math.max(2,ww)}px;height:${Math.max(2,hh)}px">
+              <div>${p.name}</div><div class="piece-meta">${fmt(p.w)}×${fmt(p.h)} cm</div>${p.rot?'<div style="font-size:10px;color:#b91c1c">↻ 90°</div>':'<div style="font-size:10px;color:#64748b">原方向</div>'}
+            </div>`;
+          }).join('')}
+          ${b.free.filter(r=>r.w>=20&&r.h>=20).map(r=>{
+            const left=(trim+r.x)/W*boardPxW;
+            const top=(trim+r.y)/H*boardPxH;
+            const ww=r.w/W*boardPxW;
+            const hh=r.h/H*boardPxH;
+            const label=`${fmt(r.w)} × ${fmt(r.h)} cm`;
+            return `<div class="remnant-overlay" style="left:${left}px;top:${top}px;width:${Math.max(4,ww)}px;height:${Math.max(4,hh)}px"><span>${label}</span></div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="formula">已使用：${fmt(used/10000)} m²　｜　可用區剩餘：${fmt((boardArea-used)/10000)} m²</div>
+    </div>`;
+  });
+
+  // 自動整理每片大板的可用殘料矩形；過小區塊不列入，避免把鋸縫碎料誤當可用餘料。
+  let remnantCount=0;
+  out+=`<div class="card" style="margin-top:14px">
+    <h3>♻️ 自動產生可用餘料</h3>
+    <div class="formula">已扣除四周修邊與鋸縫；僅列出至少 20 × 20 cm 的矩形區域。</div>`;
+
+  best.boards.forEach((b,bi)=>{
+    const useful=b.free
+      .filter(r=>r.w>=20&&r.h>=20)
+      .sort((a,b)=>b.w*b.h-a.w*a.h);
+
+    if(!useful.length) return;
+
+    useful.forEach(r=>{
+      remnantCount++;
+      const cai=r.w*r.h/(30.3*30.3);
+      out+=`<div class="remnant-item">
+        <div>
+          <b>第 ${bi+1} 片大板</b>　${fmt(r.w)} × ${fmt(r.h)} cm
+          <span class="remnant-cai">約 ${fmt(cai)} 才</span>
+        </div>
+        <span></span>
+      </div>`;
+    });
+  });
+
+  if(!remnantCount){
+    out+=`<div class="empty">沒有符合 20 × 20 cm 的可用矩形餘料。</div>`;
+  }else{
+    out+=`<div class="formula" style="margin-top:8px">共找到 ${remnantCount} 塊可用矩形餘料。</div>`;
+  }
+  out+=`</div>`;
+
+  out+=`<div class="notice">排版已納入：四周修邊、配料 90° 旋轉、鋸縫預留，以及多種有限排列順序比較。天然石材紋路、缺陷、實際下刀路徑與特殊異形加工仍需現場確認。</div>`;
+
+  document.getElementById('pOut').innerHTML=out;
+  try{setTimeout(()=>loadEditor('layout',window.layoutBest?.boards),30)}catch(e){}
+  addHistory('排版','大板排版',{
+    boardL:W,boardD:H,kerf,trim,
+    pieces:ps.map(p=>({name:p.name,L:p.w,D:p.h}))
+  },`${best.count}片／利用率${fmt(best.util*100)}%／可用餘料${remnantCount}塊`);
+}
+
+
+
+function openLineMessage(message){
+  const text=String(message||'').trim();
+  if(!text)return alert('目前沒有可產生的 LINE 訊息。請先完成計算或選擇紀錄。');
+  const url='https://line.me/R/msg/text/?'+encodeURIComponent(text);
+  const a=document.createElement('a');
+  a.href=url;
+  a.target='_blank';
+  a.rel='noopener noreferrer';
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+function shareRemnantLine(){
+  const brand=document.getElementById('rBrand')?.selectedOptions[0]?.text||'未指定品牌';
+  const price=n('rPrice'),L=n('rL'),D=n('rD'),rl=n('rRL'),rd=n('rRD');
+  if(!price||!L||!D||!rl||!rd)return alert('請先完成餘料價格計算。');
+  const area=L*D/10000,rem=rl*rd/10000,val=price/area*rem,cai=rem/(.303*.303);
+  openLineMessage(`【餘料價格計算】\n品牌：${brand}\n大板：${fmt(L)} × ${fmt(D)} cm\n餘料：${fmt(rl)} × ${fmt(rd)} cm\n餘料面積：${fmt(rem)} m²\n餘料才數：約 ${fmt(cai)} 才\n餘料價格：$${money(val)}\n原板比例：${fmt(rem/area*100)}%`);
+}
+function shareLayoutLine(){
+  const W=n('pL'),H=n('pD');
+  const text=(document.getElementById('pOut')?.innerText||'').trim();
+  if(!W||!H||!text||text.includes('請輸入'))return alert('請先完成大板配料計算。');
+  const compact=text.replace(/\n{3,}/g,'\n').slice(0,3500);
+  openLineMessage(`【大板配料計算】\n大板尺寸：${fmt(W)} × ${fmt(H)} cm\n\n${compact}`);
+}
+async function sharePatternCaseToLine(){
+  const W=n('vL'),H=n('vD');
+  const dataUrl=window.patternCaseImageData;
+  if(!W||!H)return alert('請先完成花紋版配料計算。');
+  if(!dataUrl)return alert('目前沒有解說圖，請先完成花紋排版並產生解說圖。');
+
+  try{
+    // 1. 先自動下載解說圖
+    let blob;
+    if(dataUrl.startsWith('data:')){
+      const comma=dataUrl.indexOf(',');
+      const meta=dataUrl.slice(0,comma);
+      const body=dataUrl.slice(comma+1);
+      if(meta.includes(';base64')){
+        const bin=atob(body);
+        const bytes=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+        const mime=(meta.match(/^data:([^;]+)/)||[])[1]||'image/png';
+        blob=new Blob([bytes],{type:mime});
+      }else{
+        blob=new Blob([decodeURIComponent(body)],{type:'image/png'});
+      }
+    }else{
+      const res=await fetch(dataUrl);
+      if(!res.ok)throw new Error('解說圖讀取失敗');
+      blob=await res.blob();
+    }
+
+    const file=new File([blob],'花紋圖裁切解說案例圖.png',{type:blob.type||'image/png'});
+    const downloadUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=downloadUrl;
+    a.download='花紋圖裁切解說案例圖.png';
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(downloadUrl),2000);
+
+    const rule=document.getElementById('vRule')?.selectedOptions?.[0]?.text||'未指定';
+    const message=`【花紋版配料解說圖】\n大板尺寸：${fmt(W)} × ${fmt(H)} cm\n排版規則：${rule}\n\n已附上「花紋圖裁切解說案例圖」。`;
+
+    // 2. 手機支援檔案分享時，直接把圖片交給系統分享面板；選 LINE 即可帶圖進 LINE。
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({title:'花紋圖裁切解說案例圖',text:message,files:[file]});
+      return;
+    }
+
+    // 3. 不支援檔案分享的瀏覽器：仍完成下載，並開啟 LINE 文字分享。
+    openLineMessage(message);
+    alert('解說圖已自動下載。此瀏覽器不支援直接帶圖片分享，已開啟 LINE 文字分享；請在 LINE 中手動附加剛下載的解說圖。');
+  }catch(err){
+    if(err?.name==='AbortError')return;
+    console.error('解說圖分享 LINE 失敗',err);
+    alert('解說圖已嘗試下載，但傳送 LINE 失敗。請確認手機已安裝 LINE，或從系統分享面板選擇 LINE。');
+  }
+}
+
+function sharePatternLine(){
+  const W=n('vL'),H=n('vD');
+  const out=(document.getElementById('patternOut')?.innerText||'').trim();
+  if(!W||!H||!out||out.includes('請輸入'))return alert('請先完成花紋版配料計算。');
+  const rows=getPatternRows();
+  const pieceText=rows.map((p,i)=>`${i+1}. ${p.name} ${fmt(p.w)} × ${fmt(p.h)} cm × ${p.qtyIndex||1}`).join('\n');
+  const compact=out.replace(/\n{3,}/g,'\n').slice(0,3200);
+  openLineMessage(`【花紋版配料】\n大板尺寸：${fmt(W)} × ${fmt(H)} cm\n固定紋路方向：${document.getElementById('vFixedVein').checked?'是':'否'}\n紋路接續優先：${document.getElementById('vContinuity').checked?'是':'否'}\n\n配料：\n${pieceText}\n\n計算結果：\n${compact}`);
+}
+function shareLossLine(){
+  const len=nLoss('len'),unit=nLoss('unit'),rate=nLoss('lossRate'),sale=nLoss('sale');
+  const vals=['r1','r2','r3','r4','r5','r6'].map(id=>document.getElementById(id)?.textContent||'—');
+  if(!len||!unit||!sale||!document.getElementById('r1')?.textContent||document.getElementById('r1').textContent==='—')return alert('請先完成大板價格應用率計算。');
+  openLineMessage(`【大板價格應用率】\n材料長度：${fmt(len)} cm\n材料單價：${fmt(unit)} 元/cm\n損耗率：${fmt(rate)}%\n板材售價：${fmt(sale)} 元\n\n總長度：${vals[0]} 公分\n每片收益：${vals[1]} 元\n收益損耗：${vals[2]} 元\n板材占比：${vals[3]} %\n加工實際收益：${vals[4]} 元\n每公分代工費：${vals[5]} 元/cm`);
+}
+function shareHistoryLine(){
+  const t=document.getElementById('hType')?.value||'';
+  const name={餘料:'餘料價格計算',排版:'大板配料計算',花紋版:'花紋版配料',損耗:'大板價格應用率'}[t];
+  if(!t||!name)return alert('請先選擇要查詢的紀錄類型。');
+  const q=(document.getElementById('hSearch')?.value||'').toLowerCase();
+  const arr=history.filter(x=>x.type===t&&JSON.stringify(x).toLowerCase().includes(q));
+  if(!arr.length)return alert('目前沒有可分享的紀錄。');
+  const lines=arr.slice(0,20).map((x,i)=>`${i+1}. ${x.time}\n${x.title||name}\n${x.result}`).join('\n\n');
+  openLineMessage(`【${name}｜紀錄查詢】\n共 ${arr.length} 筆${q?`｜搜尋：${q}`:''}\n\n${lines}`);
+}
+
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  const q=(document.getElementById('hSearch')?.value||'').toLowerCase();
+  const t=document.getElementById('hType')?.value||'';
+  if(!t){el.innerHTML='<div class="empty">請先選擇要查詢的紀錄類型</div>';return}
+  const arr=history.filter(x=>x.type===t && JSON.stringify(x).toLowerCase().includes(q));
+  if(!arr.length){el.innerHTML='<div class="empty">目前沒有符合的「'+({餘料:'餘料價格計算',排版:'大板配料計算',花紋版:'花紋版配料',損耗:'大板價格應用率'}[t]||t)+'」紀錄</div>';return}
+  const typeName={餘料:'餘料價格計算',排版:'大板配料計算',花紋版:'花紋版配料',損耗:'大板價格應用率'}[t]||t;
+  el.innerHTML='<div class="formula" style="margin-bottom:8px">目前查詢：'+typeName+'（共 '+arr.length+' 筆）</div>'+arr.map(x=>`<div class="history-item"><span class="badge">${typeName}</span> <small>${x.time}</small><br><b>${x.title}</b><br>${x.result}<div class="actions">${['餘料','損耗'].includes(x.type)?`<button class="secondary" onclick="reuse('${x.id}')">再次計算</button>`:''}<button class="secondary danger" onclick="delHistory('${x.id}')">刪除</button></div></div>`).join('');
+}
+function delHistory(id){history=history.filter(x=>String(x.id)!==String(id));save()}
+function clearHistory(){if(confirm('確定清除全部歷史紀錄？')){history=[];save()}}
+function reuse(id){
+ const x=history.find(y=>String(y.id)===String(id));if(!x)return;
+ if(x.type==='餘料'){go('remnant');const d=x.data;['rPrice','rL','rD','rRL','rRD'].forEach((id,i)=>document.getElementById(id).value=[d.price,d.L,d.D,d.rl,d.rd][i])}
+ if(x.type==='損耗'){go('loss');const d=x.data;['len','unit','lossRate','sale'].forEach((id,i)=>document.getElementById(id).value=[d.len,d.unit,(d.rate??0),d.sale][i])}
+
+}
+function go(id){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('nav button,.app-bottom-nav .app-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.setKitchen3DActive?.(id==='kitchenPrompt');
+  if(id==='kitchenPrompt')requestAnimationFrame(()=>{window.updateKitchen3D?.({fit:false});window.resizeKitchen3D?.();});
+  document.querySelectorAll(`nav button[data-page="${id}"],.app-bottom-nav .app-tab[data-page="${id}"]`).forEach(x=>x.classList.add('active'));
+  scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('nav button,.app-bottom-nav .app-tab').forEach(b=>b.onclick=()=>go(b.dataset.page));
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loss').classList.contains('active'))calcLossOriginal()});
+
+/* ===== 5.17 花紋版配料 ===== */
+let patternImageData='';
+window.sim1GetPatternImageData=()=>patternImageData;
+let patternRowCount=0;
+document.getElementById('patternImageInput')?.addEventListener('change',function(e){
+ const file=e.target.files?.[0]; if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+   patternImageData=reader.result;
+   document.getElementById('patternImagePreview').innerHTML=`<img src="${patternImageData}" alt="大板花紋預覽">`; if(window.sim1RefreshSharedData)window.sim1RefreshSharedData();
+ };
+ reader.readAsDataURL(file);
+});
+
+const PATTERN_POSITION_OPTIONS = {
+ straight:["一字型壁面","一字型左側牆","一字型右側牆","一字型檯面","一字型正面厚度"],
+ L:["L 型長邊檯面","L 型短邊檯面","L型長邊壁面","L型長邊左壁面","L型長邊右壁面","L型短邊壁面","L型短邊左壁面","L型短邊右壁面","L型長邊正面厚度","L型短邊正面厚度"],
+ U:["ㄇ字型左側檯面","ㄇ字型後側檯面","ㄇ字型右側檯面","ㄇ字型左側壁面","ㄇ字型後側壁面","ㄇ字型右側壁面","ㄇ字型左側正面厚度","ㄇ字型後側正面厚度","ㄇ字型右側正面厚度"],
+ island:["中島檯面","中島左側落板","中島右側落板","中島正面厚度","中島背面厚度"],
+ other:["其他"]
+};
+function updatePatternPositionOptions(typeSelect, keepValue=true){
+ const tr=typeSelect?.closest('tr'); if(!tr)return;
+ const pos=tr.querySelector('[data-k="name"]'); if(!pos)return;
+ const type=typeSelect.value, previous=keepValue?pos.value:'';
+ const items=PATTERN_POSITION_OPTIONS[type]||[];
+ pos.innerHTML='<option value="">'+(type?'選擇位置':'請先選廚具型式')+'</option>'+items.map(x=>`<option>${x}</option>`).join('');
+ pos.disabled=!type;
+ if(previous && items.includes(previous))pos.value=previous;
+ else pos.value='';
+}
+
+function addPatternRow(data={}){
+ patternRowCount++;
+ const n=patternRowCount;
+ const tr=document.createElement('tr');
+ tr.dataset.n=n;
+ tr.innerHTML=`<td><b style="color:#b91c1c">${n}</b></td>
+ <td><select class="name-input" data-k="type" aria-label="第 ${n} 件材料廚具型式" onchange="updatePatternPositionOptions(this)"><option value="" selected disabled>廚具型式</option><option value="straight">一字型</option><option value="L">L 型</option><option value="U">ㄇ字型</option><option value="island">中島</option></select><select class="name-input" data-k="name" aria-label="第 ${n} 件材料位置" style="margin-top:5px" disabled><option value="">請先選廚具型式</option></select></td>
+ <td><input class="pattern-num pattern-size-input" data-k="w" type="number" inputmode="numeric" placeholder="0"></td>
+ <td><input class="pattern-num pattern-size-input" data-k="h" type="number" inputmode="numeric" placeholder="0"></td>
+ <td><input class="pattern-num pattern-qty-input" data-k="qty" type="number" min="1" inputmode="numeric" placeholder="0"></td>
+ <td style="text-align:center"><input data-k="rotate" type="checkbox" ${data.rotate!==false?'checked':''}></td>`;
+ 
+ if(data.name){
+   const inferred=/^中島/.test(data.name)?'island':/^L ?型/.test(data.name)?'L':/^ㄇ字型/.test(data.name)?'U':/^一字型/.test(data.name)?'straight':'other';
+   tr.querySelector('[data-k="type"]').value=inferred;
+   updatePatternPositionOptions(tr.querySelector('[data-k="type"]'),false);
+   tr.querySelector('[data-k="name"]').value=data.name;
+ }
+ document.getElementById('patternRows').appendChild(tr);
+ // 新增配料時，若目前選擇「最省材料」，同步套用該規則。
+ if(document.getElementById('vRule')?.value==='material'){
+   tr.querySelector('[data-k="rotate"]').checked=true;
+   
+ }
+}
+function getPatternRows(){
+ const rows=[...document.querySelectorAll('#patternRows tr')];
+ const out=[];
+ rows.forEach((tr,idx)=>{
+   const get=k=>tr.querySelector(`[data-k="${k}"]`);
+   const w=parseFloat(get('w')?.value)||0,h=parseFloat(get('h')?.value)||0,qty=Math.max(1,parseInt(get('qty')?.value)||1);
+   if(w>0&&h>0) for(let q=1;q<=qty;q++) out.push({name:get('name')?.value?.trim()||`配料${idx+1}`,w,h,allowRotate:!!get('rotate')?.checked,vein:get('vein')?.value||'parallel',sourceRow:idx+1,qtyIndex:q});
+ });
+ return out;
+}
+function patternOrientations(item,fixedVein){
+ const arr=[{w:item.w,h:item.h,rot:false}];
+ if(!fixedVein && item.allowRotate && Math.abs(item.w-item.h)>1e-9) arr.push({w:item.h,h:item.w,rot:true});
+ return arr;
+}
+function patternPlace(board,item,kerf,fixedVein){
+ let best=null;
+ for(let fi=0;fi<board.free.length;fi++){
+  const r=board.free[fi];
+  for(const o of patternOrientations(item,fixedVein)){
+   const needW=o.w+kerf,needH=o.h+kerf;
+   if(needW>r.w+1e-9||needH>r.h+1e-9)continue;
+   const dw=r.w-needW,dh=r.h-needH;
+   // 以「更容易形成連續大面」為主，並兼顧碎料。
+   const score=[Math.min(dw,dh),Math.max(dw,dh),r.w*r.h-o.w*o.h];
+   if(!best||score[0]<best.score[0]||(score[0]===best.score[0]&&score[1]<best.score[1])||(score[0]===best.score[0]&&score[1]===best.score[1]&&score[2]<best.score[2])) best={fi,x:r.x,y:r.y,w:o.w,h:o.h,rot:o.rot,needW,needH,score};
+  }
+ }
+ return best;
+}
+function patternSplit(board,c){
+ const used={x:c.x,y:c.y,w:c.needW,h:c.needH};const out=[];
+ for(const r of board.free){
+  const hit=!(used.x>=r.x+r.w-1e-9||used.x+used.w<=r.x+1e-9||used.y>=r.y+r.h-1e-9||used.y+used.h<=r.y+1e-9);
+  if(!hit){out.push({...r});continue;}
+  if(used.x>r.x+1e-9)out.push({x:r.x,y:r.y,w:used.x-r.x,h:r.h});
+  if(used.x+used.w<r.x+r.w-1e-9)out.push({x:used.x+used.w,y:r.y,w:r.x+r.w-(used.x+used.w),h:r.h});
+  if(used.y>r.y+1e-9)out.push({x:r.x,y:r.y,w:r.w,h:used.y-r.y});
+  if(used.y+used.h<r.y+r.h-1e-9)out.push({x:r.x,y:used.y+used.h,w:r.w,h:r.y+r.h-(used.y+used.h)});
+ }
+ const clean=[];
+ for(let i=0;i<out.length;i++){const a=out[i];if(a.w<.01||a.h<.01)continue;let inside=false;for(let j=0;j<out.length;j++){if(i===j)continue;const b=out[j];if(b.x<=a.x+1e-7&&b.y<=a.y+1e-7&&b.x+b.w>=a.x+a.w-1e-7&&b.y+b.h>=a.y+a.h-1e-7){inside=true;break}}if(!inside)clean.push(a)}
+ return clean;
+}
+function patternAdd(board,item,c){return {free:patternSplit(board,c),parts:board.parts.concat([{...item,x:c.x,y:c.y,w:c.w,h:c.h,rot:c.rot}])};}
+function patternScore(boards,totalArea,boardArea,continuity){
+ const count=boards.length,util=totalArea/(count*boardArea);
+ // 連續性優先：同板相鄰的長邊件越多越好，並鼓勵大型件形成連續帶。
+ let adj=0,islandJoin=0;
+ const touch=(a,c)=>{
+   const touchX=Math.abs((a.x+a.w)-c.x)<.001||Math.abs((c.x+c.w)-a.x)<.001;
+   const overlapY=Math.min(a.y+a.h,c.y+c.h)-Math.max(a.y,c.y);
+   const touchY=Math.abs((a.y+a.h)-c.y)<.001||Math.abs((c.y+c.h)-a.y)<.001;
+   const overlapX=Math.min(a.x+a.w,c.x+c.w)-Math.max(a.x,c.x);
+   return (touchX&&overlapY>Math.min(a.h,c.h)*.35)||(touchY&&overlapX>Math.min(a.w,c.w)*.35);
+ };
+ if(continuity) for(const b of boards){
+   for(let i=0;i<b.parts.length;i++)for(let j=i+1;j<b.parts.length;j++){
+     const a=b.parts[i],c=b.parts[j];
+     if(touch(a,c))adj++;
+     const names=[String(a.name||''),String(c.name||'')].sort().join('|');
+     if((names.includes('桌面')||names.includes('檯面'))&&(names.includes('前立')||names.includes('前板'))&&touch(a,c)) islandJoin++;
+     if((names.includes('側板')||names.includes('左側')||names.includes('右側'))&&
+        (names.includes('桌面')||names.includes('檯面')||names.includes('前立')||names.includes('前板'))&&touch(a,c)) islandJoin++;
+   }
+ }
+ return {count,util,adj,islandJoin};
+}
+function makePatternBoardHTML(board,bi,W,H,trim,patternImageData){
+ const bw=Math.max(320,Math.min(820,W*2)),bh=Math.max(180,Math.min(430,H*2));
+ let html=`<div class="card pattern-result"><h3>第 ${bi+1} 片大板</h3><div style="overflow:auto"><div class="pattern-board" style="width:${bw}px;height:${bh}px">${patternImageData?`<img src="${patternImageData}" alt="大板花紋">`:''}`;
+ for(const p of board.parts){
+  const left=(trim+p.x)/W*bw,top=(trim+p.y)/H*bh,ww=p.w/W*bw,hh=p.h/H*bh;
+  // 以原板圖片座標顯示花紋，固定方向時不旋轉背景，讓紋路位置可直接追蹤。
+  const bg=patternImageData?`background-image:url('${patternImageData}');background-size:${bw}px ${bh}px;background-position:${-left}px ${-top}px;background-repeat:no-repeat;`:'';
+  html+=`<div class="pattern-cut" style="left:${left}px;top:${top}px;width:${ww}px;height:${hh}px;${bg}"><div class="cut-label">${p.name}<br>${fmt(p.w)} × ${fmt(p.h)} cm${p.rot?' · ↻90°':''}</div></div>`;
+ }
+ for(const r of board.free.filter(r=>r.w>=20&&r.h>=20)){
+  const left=(trim+r.x)/W*bw,top=(trim+r.y)/H*bh,ww=r.w/W*bw,hh=r.h/H*bh;
+  html+=`<div class="pattern-remnant" style="left:${left}px;top:${top}px;width:${ww}px;height:${hh}px">餘料<br>${fmt(r.w)} × ${fmt(r.h)}</div>`;
+ }
+ html+=`</div></div><div class="formula">紋路來源：原始大板圖片　｜　配料數：${board.parts.length} 件</div></div>`;
+ return html;
+}
+function cropPatternThumb(p,W,H){
+ // 使用同一張原板圖的背景定位方式做預覽，確保縮圖仍對應原板紋路。
+ return `<div style="position:relative;height:92px;background:#f8fafc;border:1px solid #dbe3ec;border-radius:10px;overflow:hidden"><div style="position:absolute;inset:0;background-image:url('${patternImageData}');background-size:100% 100%;background-position:center;filter:saturate(.96)"></div><div style="position:absolute;inset:0;border:2px solid #dc2626;pointer-events:none"></div><div style="position:absolute;left:5px;bottom:5px;background:#fffddcdd;border-radius:6px;padding:2px 5px;font-size:10px;font-weight:900">${p.name} ${fmt(p.w)}×${fmt(p.h)}</div></div>`;
+}
+function loadImageData(src){
+ return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});
+}
+async function buildPatternCaseImage(best,W,H,trim,patternImageData){
+ if(!patternImageData)return null;
+ const img=await loadImageData(patternImageData), boards=best.boards||[];
+ const cols=2,bw=680,bh=Math.round(bw*H/W),gx=35,gy=55,top=115;
+ const rows=Math.max(1,Math.ceil(boards.length/cols));
+ let detail=0; boards.forEach(b=>{detail+=70+(b.parts||[]).length*22+(b.free||[]).filter(r=>r.w>=20&&r.h>=20).length*20+30});
+ const cw=50+cols*bw+(cols-1)*gx+50, ch=Math.max(1000,top+rows*(bh+gy)+detail+230);
+ const c=document.createElement('canvas');c.width=cw;c.height=ch;const ctx=c.getContext('2d');
+ ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);
+ ctx.fillStyle='#0f2745';ctx.font='900 30px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText('花紋圖裁切解說案例圖',50,45);
+ ctx.fillStyle='#475569';ctx.font='15px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText(`大板 ${fmt(W)} × ${fmt(H)} cm｜修邊 ${fmt(trim)} cm｜共 ${boards.length} 片大板｜利用率 ${fmt(best.score.util*100)}%`,50,72);
+ ctx.fillText('🔴 紅色虛線＝材料裁切線　🟡 黃框＝可用餘料　🔵 箭頭＝紋路方向',50,96);
+ boards.forEach((b,bi)=>{
+  const col=bi%cols,row=Math.floor(bi/cols),bx=50+col*(bw+gx),by=top+row*(bh+gy);
+  ctx.fillStyle='#0f2745';ctx.font='900 18px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText(`大板 ${bi+1}｜${fmt(W)} × ${fmt(H)} cm`,bx,by-12);
+  ctx.drawImage(img,bx,by,bw,bh);ctx.strokeStyle='#173f68';ctx.lineWidth=3;ctx.strokeRect(bx,by,bw,bh);
+  (b.parts||[]).forEach((p,i)=>{
+   const x=bx+(trim+p.x)/W*bw,y=by+(trim+p.y)/H*bh,w=p.w/W*bw,h=p.h/H*bh;
+   ctx.save();ctx.setLineDash([9,6]);ctx.strokeStyle='#dc2626';ctx.lineWidth=4;ctx.strokeRect(x,y,w,h);ctx.restore();
+   ctx.fillStyle='#0f2745';ctx.fillRect(x+4,y+4,Math.min(260,Math.max(90,w-8)),29);ctx.fillStyle='#fff';ctx.font='900 12px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText(`${i+1}. ${p.name||`配料${i+1}`}｜${fmt(p.w)}×${fmt(p.h)}`,x+8,y+21);
+   ctx.strokeStyle='#173f68';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+w*.25,y+h*.5);ctx.lineTo(x+w*.68,y+h*.5);ctx.stroke();ctx.fillStyle='#173f68';ctx.beginPath();ctx.moveTo(x+w*.68,y+h*.5);ctx.lineTo(x+w*.58,y+h*.5-5);ctx.lineTo(x+w*.58,y+h*.5+5);ctx.closePath();ctx.fill();
+  });
+  (b.free||[]).filter(r=>r.w>=20&&r.h>=20).forEach((r,i)=>{const x=bx+(trim+r.x)/W*bw,y=by+(trim+r.y)/H*bh,w=r.w/W*bw,h=r.h/H*bh;ctx.strokeStyle='#f59e0b';ctx.lineWidth=4;ctx.strokeRect(x,y,w,h);ctx.fillStyle='#92400e';ctx.font='900 11px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText(`餘料 ${i+1} ${fmt(r.w)}×${fmt(r.h)}`,x+4,y+16)});
+ });
+ let yy=top+rows*(bh+gy)+10;ctx.fillStyle='#0f2745';ctx.font='900 21px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText('全部材料與餘料明細',50,yy);yy+=30;
+ boards.forEach((b,bi)=>{ctx.fillStyle='#173f68';ctx.font='900 15px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText(`大板 ${bi+1}`,50,yy);yy+=22;ctx.fillStyle='#334155';ctx.font='12px system-ui,-apple-system,Noto Sans TC,sans-serif';(b.parts||[]).forEach((p,i)=>{ctx.fillText(`材料 ${i+1}｜${p.name||`配料${i+1}`}｜${fmt(p.w)}×${fmt(p.h)} cm｜位置 X ${fmt(p.x)} / Y ${fmt(p.y)}${p.rot?'｜旋轉90°':''}`,65,yy);yy+=19});const rem=(b.free||[]).filter(r=>r.w>=20&&r.h>=20);if(rem.length){ctx.fillStyle='#92400e';rem.forEach((r,i)=>{ctx.fillText(`餘料 ${i+1}｜${fmt(r.w)}×${fmt(r.h)} cm｜位置 X ${fmt(r.x)} / Y ${fmt(r.y)}`,65,yy);yy+=19})}else{ctx.fillStyle='#334155';ctx.fillText('餘料：沒有達到 20×20 cm 的可用區域',65,yy);yy+=19}yy+=12});
+ ctx.fillStyle='#475569';ctx.font='12px system-ui,-apple-system,Noto Sans TC,sans-serif';ctx.fillText(`可用區域 ${fmt(W-trim*2)} × ${fmt(H-trim*2)} cm｜所有大板、所有材料、所有可用餘料均列於本圖`,50,ch-28);
+ return c.toDataURL('image/png');
+}
+
+function updatePatternRuleHint(){
+ const rule=document.getElementById('vRule')?.value||'pattern';
+ const hint=document.getElementById('vRuleHint'); const notice=document.getElementById('patternRuleNotice');
+ if(rule==='material'){
+  if(hint)hint.textContent='最省材料：所有輸入尺寸以能完整放入大板為主，可任意旋轉方向；下方每筆配料自動勾選「允許旋轉」，紋路方向不再提供個別下拉設定。';
+  if(notice)notice.textContent='最省材料：所有輸入尺寸放得下為主，可以任意旋轉方向；下方配料會自動勾選「允許旋轉」，；系統以減少大板數量、降低材料浪費與提高利用率為主要目標。';
+ }else{
+  if(hint)hint.textContent='初步對紋對花：固定紋路方向，以紋路連續、對花與加工安全優先，再比較大板數量與利用率。';
+  if(notice)notice.textContent='初步對紋對花：紋路連續優先、固定方向、不任意旋轉；大板數量不限；保留原板座標；20×20 cm以上可用餘料以紅框標示；備註可填可不填，系統會盡可能依中島、順紋、對花、側落45°、GROUP與開孔避縫等規則排版。';
+ }
+ applyPatternRuleToRows(rule);
+}
+function applyPatternRuleToRows(rule){
+ const rows=document.querySelectorAll('#patternRows tr');
+ rows.forEach(tr=>{
+   const rotate=tr.querySelector('[data-k="rotate"]');
+   const vein=null;
+   if(rule==='material'){
+     // 最省材料：系統自動開啟旋轉，紋路可依位置調整
+     if(rotate) rotate.checked=true;
+     if(vein) vein.value='free';
+   }else{
+     // 初步對紋對花：切回時自動取消旋轉，恢復固定紋路方向
+     if(rotate) rotate.checked=false;
+     if(vein) vein.value='parallel';
+   }
+ });
+}
+function sendPatternMaterialsToKitchen(){
+ const data=window.kitchenPlacedMaterials;
+ if(!data||!data.length){alert('請先完成配料計算。');return;}
+ data.forEach(p=>{if(p.modelRotation===undefined)p.modelRotation=p.rot?90:0;});
+ // The cut list stays authoritative. Keep this action focused on navigation and one 3D rebuild.
+ window.updateMain3dLayoutFromMaterials?.(data);
+ renderKitchenImportedMaterials();
+ go('kitchenPrompt'); if(window.updateKitchen3D)window.updateKitchen3D({fit:true});
+}
+function renderKitchenImportedMaterials(){
+ const data=Array.isArray(window.kitchenPlacedMaterials)?window.kitchenPlacedMaterials:[];
+ const host=document.getElementById('kitchenImportedMaterials');if(!host)return;
+ if(!data.length){host.innerHTML='<div class="empty">尚未匯入材料。請先完成配料計算。</div>';return;}
+ const rows=data.map((p,i)=>{const rot=Number(p.modelRotation??(p.rot?90:0));return `<tr><td>${i+1}</td><td>${escapeKitchenText(p.name||('材料'+(i+1)))}</td><td>${fmt(p.w)} × ${fmt(p.h)} cm</td><td>大板 ${p.board}</td><td><select class="kitchen-piece-rotation" aria-label="第 ${i+1} 件材料 3D 方向" onchange="updateKitchenMaterialRotation(${i},this.value)"><option value="0" ${rot===0?'selected':''}>0° 原方向</option><option value="90" ${rot===90?'selected':''}>90° 旋轉</option><option value="180" ${rot===180?'selected':''}>180° 反向</option><option value="270" ${rot===270?'selected':''}>270° 旋轉</option></select></td></tr>`;}).join('');
+ const names=data.map(p=>String(p.name||'')).join(' ');
+ const hasIsland=/中島/.test(names),hasU=/ㄇ字型|ㄇ字|U型|U 型/.test(names),hasL=/L 型|L型|長邊|短邊/.test(names);
+ const detected=hasU?'ㄇ字型':hasL?'L 型':hasIsland?'中島':'一字型';
+ host.innerHTML=`<div class="notice">已匯入 ${data.length} 件材料；3D 模型依所選型式與位置組合顯示，可同時呈現多種型式（例如一字型＋中島）。尺寸按 100 cm = 1 m 換算；可逐片調整方向，3D 模型會即時更新。</div><div style="overflow:auto"><table class="pattern-table"><thead><tr><th>項次</th><th>材料／備註</th><th>尺寸</th><th>來源大板</th><th>3D 方向（可調整）</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function updateKitchenMaterialRotation(index,value){
+ const data=Array.isArray(window.kitchenPlacedMaterials)?window.kitchenPlacedMaterials:[];
+ if(!data[index])return;data[index].modelRotation=Number(value)||0;
+ if(window.updateKitchen3D)window.updateKitchen3D(); if(window.sim1OnMaterialsChanged)window.sim1OnMaterialsChanged();
+}
+
+function escapeKitchenText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function calcPatternLayout(){
+ const W=n('vL'),H=n('vD'),kerf=Math.max(0,n('vKerf')),trim=Math.max(0,n('vTrim'));const rule=document.getElementById('vRule')?.value||'pattern';const fixed=rule==='pattern',continuity=rule==='pattern',autoRem=true;
+ let ps=getPatternRows();
+ if(rule==='material') ps=ps.map(p=>({...p,allowRotate:true})); else ps=ps.map(p=>({...p,allowRotate:false}));
+ if(!W||!H||!ps.length)return alert('請輸入大板尺寸與至少一個花紋配料。');
+ if(W<=trim*2||H<=trim*2)return alert('修邊後的大板可用尺寸不足。');
+ if(!patternImageData && !confirm('尚未上傳花紋圖，仍要先做尺寸排版嗎？'))return;
+ const usableW=W-trim*2,usableH=H-trim*2,boardArea=usableW*usableH,totalArea=ps.reduce((a,p)=>a+p.w*p.h,0);
+ const items=ps.map((p,i)=>({...p,idx:i,area:p.w*p.h})).sort((a,b)=>b.area-a.area);
+ const orders=[items.slice(),items.slice().sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)),items.slice().sort((a,b)=>(b.w+b.h)-(a.w+a.h)),items.slice().sort((a,b)=>b.h-a.h)];
+ const unique=[];const seen=new Set();for(const o of orders){const k=o.map(x=>x.idx).join(',');if(!seen.has(k)){seen.add(k);unique.push(o)}}
+ const totalSteps=unique.length*items.length;const start=performance.now();let done=0;setCalcProgress(0,totalSteps,start);
+ async function run(order){const boards=[];for(const item of order){let bi=-1,bc=null,bscore=null;for(let i=0;i<boards.length;i++){const c=patternPlace(boards[i],item,kerf,fixed);if(!c)continue;const sc=[c.score[0],c.score[1],c.score[2],i];if(!bscore||sc[0]<bscore[0]||(sc[0]===bscore[0]&&sc[1]<bscore[1])||(sc[0]===bscore[0]&&sc[1]===bscore[1]&&sc[2]<bscore[2])){bi=i;bc=c;bscore=sc}}
+ if(bi<0){const nb={free:[{x:0,y:0,w:usableW,h:usableH}],parts:[]};const c=patternPlace(nb,item,kerf,fixed);if(!c)return null;boards.push(patternAdd(nb,item,c))}else boards[bi]=patternAdd(boards[bi],item,bc);done++;setCalcProgress(done,totalSteps,start);await new Promise(r=>setTimeout(r,0));}return boards}
+ let best=null;for(const o of unique){const b=await run(o);if(!b)continue;const sc=patternScore(b,totalArea,boardArea,continuity);if(!best||sc.count<best.score.count||(sc.count===best.score.count&&(continuity?(sc.islandJoin>best.score.islandJoin||(sc.islandJoin===best.score.islandJoin&&sc.adj>best.score.adj)):sc.util>best.score.util))||(sc.count===best.score.count&&sc.islandJoin===best.score.islandJoin&&sc.adj===best.score.adj&&sc.util>best.score.util))best={boards:b,score:sc}}
+ if(!best)return alert('無法完成排版：有配料尺寸超過修邊後的大板可用範圍。');
+ window.patternBest=best;
+ window.kitchenPlacedMaterials=best.boards.flatMap((b,bi)=>(b.parts||[]).map((p,pi)=>({...p,board:bi+1,name:p.name||`材料${pi+1}`}))); if(window.sim1OnMaterialsChanged)window.sim1OnMaterialsChanged();
+ const transfer=document.getElementById('patternTransferAction');if(transfer)transfer.style.display='block';
+ const all=best.boards.flatMap(b=>b.parts||[]);
+ let out=`<div class="pattern-result"><div class="pattern-summary"><div class="pattern-stat"><b>${best.score.count} 片</b><span>使用大板</span></div><div class="pattern-stat"><b>${fmt(best.score.util*100)}%</b><span>總利用率</span></div><div class="pattern-stat"><b>${fmt(totalArea/10000)} m²</b><span>配料總面積</span></div><div class="pattern-stat"><b>${best.score.adj}</b><span>紋路相鄰關係</span></div></div><div class="notice" style="margin:0">${patternImageData?'已套用上傳花紋圖：每個配料依其在大板上的座標取樣，方便現場核對紋路延續。':'目前為尺寸模型排版，尚未套用實際花紋。'}</div></div>`;
+ best.boards.forEach((b,i)=>{
+   out+=makePatternBoardHTML(b,i,W,H,trim,patternImageData);
+   out+=`<div class="pattern-board-legend">
+     <span>🔴 紅色虛線＝裁切線</span>
+     <span>🔴 紅框＝可用餘料</span>
+     <span>↔ 紋路方向＝依原板座標</span>
+     <span>↻ 旋轉＝僅在允許時使用</span>
+   </div>`;
+ });
+ out+=`<div class="pattern-explain"><div class="explain-card"><h3>紋路版配料重點</h3><ol class="explain-list"><li><b>以紋路連續為優先</b>：固定方向時不任意旋轉。</li><li><b>大板數量不限</b>：排不下就自動增加下一片。</li><li><b>保留原板座標</b>：每個配料的花紋取自同一張原板圖。</li><li><b>自動產生可用餘料</b>：20×20 cm 以上以紅框標示。</li></ol></div><div class="explain-card"><h3>本次計算結果</h3><div class="row"><span>固定紋路方向</span><b>${fixed?'是':'否'}</b></div><div class="row"><span>紋路接續優先</span><b>${continuity?'是':'否'}</b></div><div class="row"><span>鋸縫／修邊</span><b>${fmt(kerf)} / ${fmt(trim)} cm</b></div><div class="row"><span>配料件數</span><b>${ps.length} 件</b></div></div></div>`;
+ out+=`<div class="pattern-goals"><div class="goal"><b>① 紋路方向</b>先固定</div><div class="goal"><b>② 接續關係</b>優先</div><div class="goal"><b>③ 大板數</b>盡量少</div><div class="goal"><b>④ 可用餘料</b>自動保留</div><div class="goal"><b>⑤ 解說圖</b>自動列出使用區與餘料</div></div>`;
+ out+=`<div class="optimization-note"><b>🪨</b><span>花紋版仍以「實際上傳花紋圖」作為視覺來源。5.20 會把紋路方向、旋轉狀態與裁切資訊更清楚地標在排版結果；真正的紋路接縫仍以原板花紋座標核對，不把單純幾何相鄰誤稱為完整的電腦視覺接紋。</span></div>`;
+ document.getElementById('patternOut').innerHTML=out;
+ try{setTimeout(()=>loadEditor('pattern',window.patternBest?.boards),30)}catch(e){}
+ // 完成所有配料後，自動產出「花紋圖裁切解說案例圖」
+ document.getElementById('patternCaseOut').innerHTML=`<div class="case-image-card"><h2>④ 花紋圖裁切解說案例圖（全部材料）</h2><div class="case-image-wrap"><div class="empty">正在產生解說圖…</div></div></div>`;
+ try{
+   const caseData=await buildPatternCaseImage(best,W,H,trim,patternImageData); window.patternCaseImageData=caseData;
+   if(caseData){
+     document.getElementById('patternCaseOut').innerHTML=`<div class="case-image-card"><h2>④ 花紋圖裁切解說案例圖（全部材料）</h2><div class="case-image-wrap"><img src="${caseData}" alt="花紋圖裁切解說案例圖"></div><div class="case-actions"><button type="button" class="secondary" onclick="downloadPatternCaseImage(window.patternCaseImageData)">⬇ 下載解說圖</button></div><div class="case-sheet-meta">
+  <div><b>${best.score.count}</b><span>使用大板</span></div>
+  <div><b>${fmt(best.score.util*100)}%</b><span>總利用率</span></div>
+  <div><b>${fmt(kerf)} cm</b><span>鋸縫</span></div>
+  <div><b>${fmt(trim)} cm</b><span>修邊</span></div>
+</div>
+<div class="case-caption">解說圖會列出每片大板的實際使用區域、各配料位置與面積，以及達 20×20 cm 以上的餘料剩餘區域。</div></div>`;
+   }else{
+     document.getElementById('patternCaseOut').innerHTML=`<div class="case-image-card"><h2>④ 花紋圖裁切解說案例圖（全部材料）</h2><div class="empty">尚未上傳花紋圖，因此無法產生花紋裁切解說圖。</div></div>`;
+   }
+ }catch(e){document.getElementById('patternCaseOut').innerHTML=`<div class="case-image-card"><h2>④ 花紋圖裁切解說案例圖（全部材料）</h2><div class="notice">解說圖產生失敗，但排版結果已完成。請重新計算一次。</div></div>`;}
+ addHistory('花紋版','花紋版配料排版',{boardL:W,boardD:H,kerf,trim,fixed,continuity,pieces:ps.map(p=>({name:p.name,L:p.w,D:p.h,allowRotate:p.allowRotate}))},`${best.score.count}片／利用率${fmt(best.score.util*100)}%／紋路相鄰${best.score.adj}`);
+}
+addPatternRow({name:'桌面',w:320,h:80,qty:1,rotate:false});
+addPatternRow({name:'前立面',w:320,h:60,qty:1,rotate:false});
+addPatternRow({name:'後立面',w:320,h:60,qty:1,rotate:false});
+addPatternRow({name:'左側板',w:80,h:60,qty:1,rotate:false});
+addPatternRow({name:'右側板',w:80,h:60,qty:1,rotate:false});
+
+renderHistory();
+</script>
+<script>
+</script>
+<script>
+const EDITORS={
+ layout:{state:{boards:[],selected:null,history:[],future:[]},root:'layoutEditorRoot',card:'layoutEditorCard',sel:'editorSelectedInfo',info:'editorBoardInfo',check:'layoutEditorCheck'},
+ pattern:{state:{boards:[],selected:null,history:[],future:[]},root:'patternEditorRoot',card:'patternEditorCard',sel:'patternEditorSelectedInfo',info:'patternEditorBoardInfo',check:'patternEditorCheck'}
+};
+function snap(s){s.history.push(JSON.parse(JSON.stringify(s.boards)));if(s.history.length>30)s.history.shift();s.future=[]}
+function drawEditor(mode){
+ const E=EDITORS[mode],s=E.state,root=document.getElementById(E.root);if(!root||!s.boards.length)return;
+ root.innerHTML='';
+ s.boards.forEach((b,bi)=>{
+  const label=document.createElement('div');label.style='font-size:11px;font-weight:900;color:#173f68;margin:6px 0';label.textContent=`大板 ${bi+1}｜${fmt(b.W)} × ${fmt(b.H)} cm｜${b.items.length} 件`;root.appendChild(label);
+  const board=document.createElement('div');board.className='board-editor';const scale=Math.min(900/b.W,620/b.H);board.style.width=b.W*scale+'px';board.style.height=b.H*scale+'px';
+  b.items.forEach((p,pi)=>{
+   const el=document.createElement('div');el.className='editor-piece'+(s.selected?.bi===bi&&s.selected?.pi===pi?' selected':'')+(p.locked?' locked':'');
+   el.style.cssText+=`left:${p.x*scale}px;top:${p.y*scale}px;width:${p.w*scale}px;height:${p.h*scale}px`;
+   el.innerHTML=`<div><div class="ep-name">${p.name}</div><div class="ep-size">${fmt(p.w)}×${fmt(p.h)} cm</div>${p.rot?'<div class="ep-rotate">↻90°</div>':''}</div>`;
+   el.onpointerdown=e=>dragEditor(e,mode,bi,pi,scale);board.appendChild(el);
+  });root.appendChild(board);
+ });
+ updateEditorInfo(mode);
+}
+function dragEditor(ev,mode,bi,pi,scale){
+ const E=EDITORS[mode],s=E.state,p=s.boards[bi].items[pi];if(p.locked)return;ev.preventDefault();snap(s);s.selected={bi,pi};
+ const sx=ev.clientX,sy=ev.clientY,ox=p.x,oy=p.y,b=s.boards[bi];
+ const move=e=>{p.x=Math.max(0,Math.min(b.W-p.w,ox+(e.clientX-sx)/scale));p.y=Math.max(0,Math.min(b.H-p.h,oy+(e.clientY-sy)/scale));drawEditor(mode)};
+ const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);drawEditor(mode)};
+ addEventListener('pointermove',move);addEventListener('pointerup',up);
+}
+function updateEditorInfo(mode){
+ const E=EDITORS[mode],s=E.state;if(!s.selected){document.getElementById(E.sel).innerHTML='尚未選取配料'}else{const p=s.boards[s.selected.bi].items[s.selected.pi];document.getElementById(E.sel).innerHTML=`<b>${p.name}</b><br>位置 ${fmt(p.x)}×${fmt(p.y)} cm<br>尺寸 ${fmt(p.w)}×${fmt(p.h)} cm<br>${p.rot?'↻ 已旋轉90°':'原方向'}${p.locked?'　🔒':''}`}
+ document.getElementById(E.info).innerHTML=s.boards.map((b,i)=>`<b>大板 ${i+1}</b> ${fmt(b.W)}×${fmt(b.H)}｜${b.items.length} 件`).join('<br>');
+}
+function rotateEditor(mode){const E=EDITORS[mode],s=E.state;if(!s.selected)return;const p=s.boards[s.selected.bi].items[s.selected.pi];if(p.locked)return;snap(s);[p.w,p.h]=[p.h,p.w];p.rot=!p.rot;p.x=Math.min(p.x,s.boards[s.selected.bi].W-p.w);p.y=Math.min(p.y,s.boards[s.selected.bi].H-p.h);drawEditor(mode)}
+function moveEditor(mode,d){const E=EDITORS[mode],s=E.state;if(!s.selected)return;const from=s.selected.bi,to=from+d;if(to<0||to>=s.boards.length)return;const p=s.boards[from].items[s.selected.pi];if(p.locked)return;snap(s);s.boards[from].items.splice(s.selected.pi,1);p.x=0;p.y=0;s.boards[to].items.push(p);s.selected={bi:to,pi:s.boards[to].items.length-1};drawEditor(mode)}
+function lockEditor(mode){const E=EDITORS[mode],s=E.state;if(!s.selected)return;snap(s);s.boards[s.selected.bi].items[s.selected.pi].locked=!s.boards[s.selected.bi].items[s.selected.pi].locked;drawEditor(mode)}
+function undoEditor(mode){const E=EDITORS[mode],s=E.state;if(!s.history.length)return;s.future.push(JSON.parse(JSON.stringify(s.boards)));s.boards=JSON.parse(JSON.stringify(s.history.pop()));s.selected=null;drawEditor(mode)}
+function redoEditor(mode){const E=EDITORS[mode],s=E.state;if(!s.future.length)return;s.history.push(JSON.parse(JSON.stringify(s.boards)));s.boards=JSON.parse(JSON.stringify(s.future.pop()));s.selected=null;drawEditor(mode)}
+function checkEditor(mode){const E=EDITORS[mode],s=E.state,issues=[];s.boards.forEach((b,bi)=>b.items.forEach((p,i)=>{if(p.x<0||p.y<0||p.x+p.w>b.W||p.y+p.h>b.H)issues.push(`大板${bi+1}：${p.name} 超界`);for(let j=i+1;j<b.items.length;j++){const q=b.items[j];if(!(p.x+p.w<=q.x||q.x+q.w<=p.x||p.y+p.h<=q.y||q.y+q.h<=p.y))issues.push(`大板${bi+1}：${p.name} 與 ${q.name} 重疊`)}}));const el=document.getElementById(E.check);el.style.display='block';el.className=issues.length?'editor-warning':'optimization-note';el.innerHTML=issues.length?'⚠️ '+issues.join('<br>'):'✅ 排版檢查通過，可匯出 DXF。'}
+function exportDXF(mode){const s=EDITORS[mode].state;if(!s.boards.length){alert('請先完成排版');return}let d='0\nSECTION\n2\nENTITIES\n';const L=(a,b,c,e,f,g,layer)=>d+=`0\nLINE\n8\n${layer}\n10\n${a}\n20\n${b}\n11\n${c}\n21\n${e}\n`;const T=(x,y,t)=>d+=`0\nTEXT\n8\nTEXT\n10\n${x}\n20\n${y}\n40\n3\n1\n${t}\n`;s.boards.forEach((b,i)=>{L(0,0,b.W,0,'BOARD');L(b.W,0,b.W,b.H,'BOARD');L(b.W,b.H,0,b.H,'BOARD');L(0,b.H,0,0,'BOARD');T(5,5,`BOARD ${i+1} ${b.W}x${b.H}`);b.items.forEach(p=>{L(p.x,p.y,p.x+p.w,p.y,'CUT');L(p.x+p.w,p.y,p.x+p.w,p.y+p.h,'CUT');L(p.x+p.w,p.y+p.h,p.x,p.y+p.h,'CUT');L(p.x,p.y+p.h,p.x,p.y,'CUT');T(p.x+2,p.y+4,`${p.name} ${p.w}x${p.h}${p.rot?' ROT90':''}`);if(mode==='pattern')L(p.x+p.w/2,p.y+p.h/2,p.x+p.w*.65,p.y+p.h/2,'VEIN')})});d+='0\nENDSEC\n0\nEOF';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/dxf'}));a.download=`石材_${mode==='pattern'?'花紋':'大板'}配料.dxf`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function loadEditor(mode,boards){
+ if(!Array.isArray(boards)||!boards.length)return;
+ const E=EDITORS[mode],s=E.state;
+ s.boards=boards.map((b,bi)=>{
+   const raw=Array.isArray(b.items)?b.items:(Array.isArray(b.placed)?b.placed:(Array.isArray(b.parts)?b.parts:[]));
+   return {W:Number(b.W)||0,H:Number(b.H)||0,items:raw.map((p,i)=>({name:p.name||p.item?.name||`配料${i+1}`,w:Number(p.w)||0,h:Number(p.h)||0,x:Number(p.x)||0,y:Number(p.y)||0,rot:!!p.rot,locked:false})).filter(p=>p.w>0&&p.h>0)};
+ }).filter(b=>b.W>0&&b.H>0);
+ if(!s.boards.length)return;
+ s.selected=null;s.history=[];s.future=[];
+ const card=document.getElementById(E.card);if(card)card.style.display='block';
+ drawEditor(mode);
+}
+function editorRotate(){rotateEditor('layout')}function editorMoveBoard(d){moveEditor('layout',d)}function editorToggleLock(){lockEditor('layout')}function editorUndo(){undoEditor('layout')}function editorRedo(){redoEditor('layout')}function editorCheck(){checkEditor('layout')}
+function patternEditorRotate(){rotateEditor('pattern')}function patternEditorMoveBoard(d){moveEditor('pattern',d)}function patternEditorToggleLock(){lockEditor('pattern')}function patternEditorUndo(){undoEditor('pattern')}function patternEditorRedo(){redoEditor('pattern')}function patternEditorCheck(){checkEditor('pattern')}
+</script>
+<script>
+function clearFieldError(el){if(!el)return;el.classList.remove('calc-field-error');el.parentElement?.querySelector('.input-error-hint')?.remove()}
+function markFieldError(el,msg){if(!el)return;clearFieldError(el);el.classList.add('calc-field-error');const h=document.createElement('div');h.className='input-error-hint';h.textContent='⚠ '+msg;el.parentElement?.appendChild(h)}
+function clearCalcErrors(){document.querySelectorAll('.calc-field-error').forEach(e=>e.classList.remove('calc-field-error'));document.querySelectorAll('.input-error-hint').forEach(e=>e.remove())}
+function showCalcError(msg,fields){clearCalcErrors();fields.forEach(x=>markFieldError(x.el,x.msg));document.getElementById('calcErrorMessage').textContent=msg;const u=document.getElementById('calcErrorList');u.innerHTML='';fields.forEach(x=>{const li=document.createElement('li');li.textContent=x.msg;u.appendChild(li)});document.getElementById('calcErrorModal').classList.add('show');fields[0]?.el?.scrollIntoView({behavior:'smooth',block:'center'})}
+function closeCalcError(){document.getElementById('calcErrorModal')?.classList.remove('show')}
+document.addEventListener('input',e=>{if(e.target.matches('input,select'))clearFieldError(e.target)})
+function chk(id,label,zero){const e=document.getElementById(id),raw=e?.value?.trim(),v=Number(raw);return(!e||raw===''||!Number.isFinite(v)||(zero?v<0:v<=0))?{el:e,msg:`${label}請輸入${zero?'0 或正數':'大於 0 的數值'}`}:null}
+function validateRemnant(){const f=[];[['rPrice','大板價格'],['rL','大板長度'],['rD','大板深度'],['rRL','餘料長度'],['rRD','餘料深度']].forEach(x=>{const q=chk(x[0],x[1]);if(q)f.push(q)});if(f.length){showCalcError('餘料價格無法計算，請先修正輸入。',f);return false}const L=+rL.value,D=+rD.value,rl=+rRL.value,rd=+rRD.value;if(!((rl<=L&&rd<=D)||(rl<=D&&rd<=L))){showCalcError('餘料尺寸超過大板可容納範圍',[{el:rRL,msg:'餘料長度超過大板尺寸'},{el:rRD,msg:'餘料深度超過大板尺寸'}]);return false}return true}
+function validateLayout(){const f=[];[['pL','大板長度'],['pD','大板深度'],['pKerf','鋸縫寬度',true],['pTrim','四周修邊',true]].forEach(x=>{const q=chk(x[0],x[1],x[2]);if(q)f.push(q)});document.querySelectorAll('#piecesContainer .piece-row').forEach(r=>{const n=r.querySelectorAll('input[type="number"]'),a=n[0],b=n[1];if(!a.value&&!b.value)return;if(!a.value||!b.value)f.push({el:!a.value?a:b,msg:`配料 ${r.dataset.piece} 長度與深度要一起輸入`});});if(f.length){showCalcError('大板配料無法執行，請先修正輸入。',f);return false}clearCalcErrors();return true}
+function validatePattern(){const f=[];[['vL','大板長度'],['vD','大板深度'],['vKerf','鋸縫寬度',true],['vTrim','四周修邊',true]].forEach(x=>{const q=chk(x[0],x[1],x[2]);if(q)f.push(q)});document.querySelectorAll('#patternRows tr').forEach((r,i)=>{const a=r.querySelector('[data-k="w"]'),b=r.querySelector('[data-k="h"]');if(!a.value&&!b.value)return;if(!a.value||!b.value)f.push({el:!a.value?a:b,msg:`第 ${i+1} 筆配料長度與深度要一起輸入`})});if(f.length){showCalcError('花紋版配料無法執行，請先修正輸入。',f);return false}clearCalcErrors();return true}
+</script>
+<script>function validateSimpleLoss(){const f=[];[['len','材料長度'],['unit','材料單價'],['lossRate','損耗率'],['sale','板材售價']].forEach(x=>{const q=chk(x[0],x[1],false);if(q)f.push(q)});const r=document.getElementById('lossRate');if(r&&r.value!==''&&(Number(r.value)<0||Number(r.value)>100))f.push({el:r,msg:'損耗率必須 0～100'});if(f.length){showCalcError('大板價格應用率無法執行，請先修正輸入。',f);return false}clearCalcErrors();return true}</script>
+<script>
+function applySlabBrandSize(value, target){
+  const sizes={
+    vicostone330x165:[330,165],
+    vicostone300x140:[300,140],
+    LEVEL320x160:[320,160],
+    MDi320x160:[320,160]
+  };
+  const pair=sizes[value];
+  if(!pair)return;
+  if(target==='layout'){
+    const L=document.getElementById('pL'),D=document.getElementById('pD');
+    if(L)L.value=pair[0];
+    if(D)D.value=pair[1];
+  }else if(target==='pattern'){
+    const L=document.getElementById('vL'),D=document.getElementById('vD');
+    if(L)L.value=pair[0];
+    if(D)D.value=pair[1];
+  }
+}
+</script>
+
+<script>
+async function downloadPatternCaseImage(dataUrl){
+  try{
+    if(!dataUrl){
+      alert('目前沒有可下載的解說圖，請先完成花紋排版。');
+      return;
+    }
+    let blob;
+    if(dataUrl.startsWith('data:')){
+      const res=await fetch(dataUrl);
+      blob=await res.blob();
+    }else{
+      const res=await fetch(dataUrl);
+      if(!res.ok) throw new Error('圖片讀取失敗');
+      blob=await res.blob();
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='花紋圖裁切解說案例圖.png';
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(err){
+    console.error('下載解說圖失敗',err);
+    alert('解說圖下載失敗，請再按一次「下載解說圖」。');
+  }
+}
+</script>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const layoutText={
+waterfall:"A photorealistic 3D rendering of a modern luxury kitchen featuring a waterfall kitchen island. The countertop and side panels are made of high-gloss white marble with continuous vein matching seamlessly flowing from the top surface down to the ground.",
+lineIsland:"A photorealistic 3D rendering of a modern kitchen with a one-line wall kitchen layout and a parallel waterfall kitchen island. The island countertop and side panels feature high-gloss white engineered stone with continuous vein matching seamlessly flowing from the top surface down to the ground.",
+lIsland:"A photorealistic 3D rendering of a contemporary kitchen featuring an L-shaped layout with an adjacent kitchen island. The main countertops meet at a perfectly seamless 90-degree corner joint. Both the L-shaped counter and island feature ultra-thin 12mm engineered stone.",
+line:"A photorealistic 3D rendering of a modern kitchen with a straight one-line wall kitchen layout, without any kitchen island. The long, continuous countertop is made of premium stone, with clean parallel lines and integrated modern appliances.",
+lOnly:"A photorealistic 3D rendering of a contemporary kitchen featuring an L-shaped countertop layout against the walls, completely without a kitchen island. The two stone countertops meet at a perfectly seamless 90-degree corner joint, showcasing continuous texture."
+};
+const surfaces={
+gloss:"The stone has a high-gloss, mirror-like reflective finish with sharp, realistic details.",
+honed:"The countertop is ultra-thin 12mm engineered quartz with a honed matte finish and subtle satin texture, with no harsh reflections.",
+satin:"The stone surface has a refined satin texture under diffused lighting, with controlled soft reflections."
+};
+const edges={
+subtle:"The edges feature subtle beveled edges that catch elegant, natural highlights.",
+strong:"Please make the countertop beveled edges more pronounced so they catch brighter, more realistic linear highlights.",
+micro:"The edges feature an exquisitely sharp micro-bevel profile that softly catches light."
+};
+const veins={
+waterfall:"Ensure the vein pattern is perfectly continuous from the island top down the side panels to the floor, like one slab folding down as a waterfall.",
+corner:"Ensure the L-shaped countertop corner joint is seamless and the stone texture aligns naturally across both sides.",
+natural:"Use realistic natural stone veining with believable variation; avoid overly repetitive or artificial patterns."
+};
+const cameras={
+wide:"Use a wide frontal architectural view in a 16:9 aspect ratio.",
+bird:"Use a wide bird's-eye view in a 16:9 aspect ratio, clearly showing the complete walkway and circulation between cabinetry and island.",
+corner:"Use a close-up architectural view focused on the L-shaped countertop corner joint and stone craftsmanship, in a 16:9 aspect ratio.",
+island:"Use a wide but detail-rich view emphasizing the island, countertop edges, surface finish, and stone texture, in a 16:9 aspect ratio."
+};
+const lights={
+soft:"Use soft natural daylight and balanced architectural lighting.",
+linear:"Use linear pendant lighting above the island to create elegant highlights along the beveled edges.",
+diffused:"Use diffused lighting to reveal the subtle stone texture without harsh reflections.",
+led:"Use under-cabinet LED strip lighting to create refined linear highlights along the countertop edge."
+};
+const details={
+edge:"Please make the countertop beveled edges more pronounced so they catch brighter, more realistic linear highlights.",
+vein:"Please ensure the island countertop and side panels have perfectly continuous veining, like one slab folding down as a waterfall.",
+matte:"Please reduce surface reflectivity and increase roughness to create a fully honed matte, velvet-like finish with no mirror-like reflections.",
+camera:"Please use a wide bird's-eye view or a broad frontal view so the full kitchen layout and walkway circulation are clearly visible.",
+joint:"Please move the camera closer to the L-shaped countertop corner joint and show a seamless, high-quality stone joint."
+};
+let extras=[];
+function build(){
+ if(!$('kpOutput'))return;
+ const l=$('kpLayout').value,s=$('kpSurface').value,e=$('kpEdge').value,v=$('kpVein').value,c=$('kpCamera').value,light=$('kpLighting').value;
+ const actualSurface=s==='auto'?((l==='lIsland')?'honed':(l==='waterfall'||l==='lineIsland')?'gloss':'satin'):s;
+ const actualVein=v==='auto'?((l==='waterfall'||l==='lineIsland')?'waterfall':l==='lIsland'||l==='lOnly'?'corner':'natural'):v;
+ const parts=[layoutText[l],surfaces[actualSurface],edges[e],veins[actualVein],lights[light],cameras[c],
+ "Use realistic stone textures, precise material details, clean contemporary interior design, professional architectural visualization, photorealistic rendering, 16:9 aspect ratio."];
+ extras.forEach(k=>parts.push(details[k]));
+ $('kpOutput').value=parts.join("\n\n");
+ const layoutNames={waterfall:"水瀑中島",lineIsland:"一字型＋中島",lIsland:"L 型＋中島",line:"純一字型（無中島）",lOnly:"純 L 型（無中島）"};
+ $('kpHint').textContent="目前組合："+layoutNames[l]+"；表面："+({gloss:"亮面",honed:"12mm 霧面",satin:"緞面"}[actualSurface])+"；紋路："+({waterfall:"水瀑連紋",corner:"轉角對接",natural:"自然石紋"}[actualVein])+"。";
+}
+window.copyKitchenPrompt=async function(){
+ const text=$('kpOutput').value;
+ try{await navigator.clipboard.writeText(text);$('kpStatus').textContent="已複製完整 Prompt。";}
+ catch(e){const ta=$('kpOutput');ta.focus();ta.select();const ok=document.execCommand('copy');$('kpStatus').textContent=ok?"已複製完整 Prompt。":"請長按文字框全選並複製。";}
+};
+window.resetKitchenPrompt=function(){extras=[];['kpLayout','kpSurface','kpEdge','kpVein','kpCamera','kpLighting'].forEach(id=>{if($(id))$(id).selectedIndex=0});build();if(window.updateKitchen3D)window.updateKitchen3D();$('kpStatus').textContent="已恢復建議設定。";};
+window.appendKitchenDetail=function(k){if(!extras.includes(k))extras.push(k);build();$('kpStatus').textContent="已加入補充指令："+({edge:"加強倒角高光",vein:"修正紋理對接",matte:"降低反射／霧面",camera:"調整視角與動線",joint:"強調 L 型轉角接縫"}[k]);};
+['kpLayout','kpSurface','kpEdge','kpVein','kpCamera','kpLighting'].forEach(id=>$(id)?.addEventListener('change',build));
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" onerror="document.getElementById('kitchen3DStatus').textContent='3D 引擎下載失敗：請確認網路可連線至 jsDelivr，然後重新整理。'"></script>
+<script>window.THREE_160 = window.THREE;</script>
+
+<script>
+(function(){
+  const canvas=document.getElementById('kitchen3DCanvas');
+  if(!canvas)return;
+  const status=document.getElementById('kitchen3DStatus');
+  if(!window.THREE){status.textContent='3D 引擎載入失敗：請連線後重新整理頁面。';return;}
+  const THREE=window.THREE;
+  let scene,camera,renderer,root,stoneMat,cabinetMat,wallMat,floorMat;
+  let buildGeneration=0, patternImagePromise=null, patternImageSource='', currentStoneRoughness=.38;
+  let yaw=-0.72,pitch=0.48,distance=9.2,fitDistance=9.2,target=new THREE.Vector3(0,1.05,0),dragging=false,lastX=0,lastY=0,autoRotate=false,frame=0,activeModelOffsetX=0,activeModelOffsetZ=0;
+  let pointerMoved=false, kitchen3DActive=false, modelWasBuilt=false, activeLayoutTypes=[];
+  const touchPointers=new Map(); let previousPinchDistance=0, previousTouchCenter=null, dragMode='rotate';
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function stoneTexture(){
+    const c=document.createElement('canvas');c.width=512;c.height=512;
+    const x=c.getContext('2d');x.fillStyle='#f3f1ec';x.fillRect(0,0,512,512);
+    for(let i=0;i<22;i++){
+      x.beginPath();let y=Math.random()*512;x.moveTo(-20,y);
+      for(let px=0;px<=540;px+=35)x.lineTo(px,y+Math.sin(px*.018+i)*12+(Math.random()-.5)*10);
+      x.strokeStyle=i%4===0?'rgba(130,139,148,.42)':'rgba(165,171,176,.25)';
+      x.lineWidth=i%4===0?2.3:1;x.stroke();
+    }
+    const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1.6,1.6);t.colorSpace=THREE.SRGBColorSpace;return t;
+  }
+  const FLOOR_TONE_COLORS={
+    gray:'#aeb4ba',
+    white:'#f4f4f1',
+    black:'#292d30',
+    brown:'#76543e'
+  };
+  function applyFloorStyle(style){
+    if(!floorMat)return;
+    const selected=FLOOR_TONE_COLORS[style]?style:'gray';
+    const hex=FLOOR_TONE_COLORS[selected];
+    const input=document.getElementById('main3d-floor-style');
+    if(input)input.value=selected;
+    document.querySelectorAll('.k3d-floor-swatch[data-floor-tone]').forEach(btn=>{
+      btn.setAttribute('aria-pressed',String(btn.dataset.floorTone===selected));
+    });
+    if(floorMat.map){floorMat.map.dispose?.();floorMat.map=null;}
+    floorMat.color.set(hex);
+    floorMat.roughness=.94;
+    floorMat.metalness=0;
+    floorMat.needsUpdate=true;
+    render();
+  }
+  function init(){
+    scene=new THREE.Scene();scene.background=new THREE.Color('#dfe6ed');
+    camera=new THREE.PerspectiveCamera(42,1,.1,100);
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:false});
+    // Keep mobile GPU load lower while retaining readable stone edges.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+    scene.add(new THREE.HemisphereLight(0xffffff,0x8a96a3,2.0));
+    const key=new THREE.DirectionalLight(0xfff8ed,2.15); // 固定漫射柔光預設key.position.set(-4,8,6);scene.add(key);
+    const fill=new THREE.DirectionalLight(0xffffff,1.55);fill.position.set(5,5,-4);scene.add(fill);
+    stoneMat=new THREE.MeshStandardMaterial({map:stoneTexture(),roughness:.2,metalness:.02});
+    cabinetMat=new THREE.MeshStandardMaterial({color:'#d9d6cf',roughness:.72});
+    wallMat=new THREE.MeshStandardMaterial({color:'#f4f5f4',roughness:.95});
+    const initialFloorStyle=document.getElementById('main3d-floor-style')?.value||'gray';
+    floorMat=new THREE.MeshStandardMaterial({color:FLOOR_TONE_COLORS[initialFloorStyle]||FLOOR_TONE_COLORS.gray,roughness:.94,metalness:0});
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(30,30),floorMat);floor.rotation.x=-Math.PI/2;floor.position.y=-.03;floor.receiveShadow=true;scene.add(floor);
+    root=new THREE.Group();scene.add(root);
+    buildModel({fit:true});resize();render();
+    if(!status.textContent || status.textContent==='正在建立 3D 模型…')status.textContent='3D 模型已建立・可拖曳旋轉、滾輪縮放';
+    if(window.ResizeObserver)new ResizeObserver(resize).observe(document.getElementById('kitchen3DWrap'));
+    else window.addEventListener('resize',resize);
+    canvas.addEventListener('contextmenu',e=>e.preventDefault());
+    canvas.addEventListener('pointerdown',e=>{
+      dragging=true;pointerMoved=false;lastX=e.clientX;lastY=e.clientY;
+      if(e.pointerType==='touch'){touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touchPointers.size>=2){const pts=[...touchPointers.values()];previousPinchDistance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);previousTouchCenter={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};}}
+      dragMode=(e.button===2||e.shiftKey)?'pan':'rotate';
+      try{canvas.setPointerCapture(e.pointerId)}catch(_){ }
+    });
+    canvas.addEventListener('pointermove',e=>{
+      if(e.pointerType==='touch'&&touchPointers.has(e.pointerId))touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(!dragging)return;
+      if(e.pointerType==='touch'&&touchPointers.size>=2){
+        const pts=[...touchPointers.values()],distNow=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),center={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+        if(previousPinchDistance>0)distance=clamp(distance*(previousPinchDistance/Math.max(1,distNow)),fitDistance/2.6,fitDistance/1);
+        if(previousTouchCenter)panByPixels(center.x-previousTouchCenter.x,center.y-previousTouchCenter.y);
+        previousPinchDistance=distNow;previousTouchCenter=center;lastX=e.clientX;lastY=e.clientY;render();return;
+      }
+      let dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;
+      if(Math.abs(dx)+Math.abs(dy)>1)pointerMoved=true;
+      if(dragMode==='pan')panByPixels(dx,dy);else {yaw-=dx*.008;pitch=clamp(pitch+dy*.006,.12,1.25);}
+      render();
+    });
+    const endPointer=e=>{if(e.pointerType==='touch')touchPointers.delete(e.pointerId);if(touchPointers.size<2){previousPinchDistance=0;previousTouchCenter=null;}dragging=touchPointers.size>0;};
+    canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',endPointer);
+    canvas.addEventListener('wheel',e=>{e.preventDefault();distance=clamp(distance*Math.exp(e.deltaY*.001),fitDistance/2.6,fitDistance/1);render();},{passive:false});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)stopKitchenAnimation();else if(kitchen3DActive&&autoRotate)startKitchenAnimation();});
+    animate();
+  }
+  function box(parent,w,h,d,mat,x,y,z,bevel=false){
+    const geo=new THREE.BoxGeometry(w,h,d);
+    const mesh=new THREE.Mesh(geo,mat);mesh.position.set(x+activeModelOffsetX,y,z+activeModelOffsetZ);mesh.castShadow=false;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+  }
+  function panByPixels(dx,dy){
+    if(!camera||!target)return;
+    const forward=new THREE.Vector3();camera.getWorldDirection(forward);
+    const right=new THREE.Vector3().crossVectors(forward,camera.up).normalize();
+    const up=new THREE.Vector3().copy(camera.up).normalize();
+    const h=Math.max(1,canvas.clientHeight),worldPerPixel=(2*distance*Math.tan((camera.fov||42)*Math.PI/360))/h;
+    target.addScaledVector(right,-dx*worldPerPixel);target.addScaledVector(up,dy*worldPerPixel);
+  }
+  function readToggle(id,fallback=true){const el=document.getElementById(id);return el?!!el.checked:fallback;}
+  function readValue(id,fallback){const el=document.getElementById(id);const n=Number(el?.value);return Number.isFinite(n)&&n!==0?n:fallback;}
+  function isLayoutShown(type){return ({straight:readToggle('main3d-show-straight',true),island:readToggle('main3d-show-island',true),L:readToggle('main3d-show-L',true),U:readToggle('main3d-show-U',true)})[type]!==false;}
+  function equipmentIdType(type){return type==='L'?'l':type==='U'?'u':(['straight','island'].includes(type)?type:'straight');}
+  function equipmentEnabled(kind,layoutType='straight'){
+    const prefix=equipmentIdType(layoutType);
+    const el=document.getElementById(`main3d-equip-${prefix}-${kind}`);
+    if(el)return !!el.checked;
+    const legacyIds={sink:'main3d-sink',stove:'main3d-stove',faucet:'main3d-faucet',dishwasher:'main3d-dishwasher',upper:'main3d-upper-cabinets',lower:'main3d-lower-cabinets'};
+    return readToggle(legacyIds[kind],true);
+  }
+  function makeMetalMaterial(){return new THREE.MeshStandardMaterial({color:'#aab3bb',metalness:.78,roughness:.25});}
+  function addSinkFeature(run,topY,layoutType='straight'){
+    if(!run||!equipmentEnabled('sink',layoutType))return;
+    const rw=Math.max(.5,run.width||run.length||1.8),rd=Math.max(.35,run.depth||.6),sw=Math.min(.5,rw*.28),sd=Math.min(.37,rd*.62),x=(run.x||0)-rw*.08,z=(run.z||0);
+    const glass=new THREE.MeshStandardMaterial({color:'#182027',metalness:.16,roughness:.28}),metal=makeMetalMaterial();
+    box(root,sw+.035,.009,sd+.035,metal,x,topY+.003,z,false);
+    box(root,sw,.012,sd,glass,x,topY+.009,z,false);
+    box(root,sw-.055,.005,sd-.055,new THREE.MeshStandardMaterial({color:'#252d34',metalness:.08,roughness:.42}),x,topY+.016,z,false);
+    // Drain detail
+    const drain=new THREE.Mesh(new THREE.CircleGeometry(.027,16),metal);drain.rotation.x=-Math.PI/2;drain.position.set(x+activeModelOffsetX,topY+.019,z+activeModelOffsetZ);root.add(drain);
+  }
+  function addFaucetFeature(run,topY,layoutType='straight'){
+    // Faucet visibility is independently controllable for each kitchen layout.
+    if(!run||!equipmentEnabled('faucet',layoutType))return;
+    const rw=Math.max(.5,run.width||run.length||1.8),rd=Math.max(.35,run.depth||.6),x=(run.x||0)-rw*.08,z=(run.z||0)-rd*.29,metal=makeMetalMaterial();
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.14,10),metal);stem.position.set(x+activeModelOffsetX,topY+.075,z+activeModelOffsetZ);root.add(stem);
+    const spout=new THREE.Mesh(new THREE.TorusGeometry(.052,.009,8,18,Math.PI),metal);spout.rotation.y=Math.PI/2;spout.position.set(x+activeModelOffsetX,topY+.142,z+.035+activeModelOffsetZ);root.add(spout);
+    const nose=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.035,8),metal);nose.position.set(x+activeModelOffsetX+.035,topY+.113,z+.035+activeModelOffsetZ);root.add(nose);
+  }
+  function addDishwasherFeature(run,topY,layoutType='straight'){
+    if(!run||!equipmentEnabled('dishwasher',layoutType))return;
+    const rw=Math.max(.7,run.width||run.length||1.8),rd=Math.max(.35,run.depth||.6);
+    const sinkWidth=Math.min(.5,rw*.28),sinkX=(run.x||0)-rw*.08;
+    const dw=Math.min(.45,Math.max(.28,rw*.22));
+    const minX=-rw/2+dw/2+.02,maxX=rw/2-dw/2-.02;
+    let x=sinkX-sinkWidth/2-dw/2-.012;
+    if(x<minX)x=Math.min(maxX,sinkX+sinkWidth/2+dw/2+.012);
+    x=clamp(x,minX,maxX);
+    const z=(run.z||0)+rd/2+.018,h=Math.max(.56,Math.min(.70,topY-.18)),y=.08+h/2;
+    const body=new THREE.MeshStandardMaterial({color:'#929ba3',metalness:.2,roughness:.38});
+    const front=new THREE.MeshStandardMaterial({color:'#dfe3e6',metalness:.14,roughness:.4});
+    const control=new THREE.MeshStandardMaterial({color:'#424b54',metalness:.15,roughness:.26});
+    box(root,dw,h,.028,body,x,y,z,false);
+    box(root,dw-.035,h-.04,.012,front,x,y,z+.021,false);
+    box(root,dw-.09,.035,.008,control,x,y+h/2-.065,z+.031,false);
+    for(let i=0;i<3;i++){
+      const dot=new THREE.Mesh(new THREE.CircleGeometry(.006,8),new THREE.MeshStandardMaterial({color:'#d7dce0',metalness:.1,roughness:.3}));
+      dot.position.set(x-dw*.20+i*dw*.055+activeModelOffsetX,y+h/2-.065,z+.036+activeModelOffsetZ);root.add(dot);
+    }
+  }
+  function addCooktopFeature(run,topY,layoutType='straight'){
+    if(!run||!equipmentEnabled('stove',layoutType))return;
+    const rw=Math.max(.5,run.width||run.length||1.8),rd=Math.max(.35,run.depth||.6),sw=Math.min(.58,rw*.30),sd=Math.min(.43,rd*.68),x=(run.x||0)+rw*.20,z=(run.z||0);
+    const glass=new THREE.MeshStandardMaterial({color:'#101419',metalness:.28,roughness:.2}),ringMat=new THREE.MeshStandardMaterial({color:'#080b0e',metalness:.35,roughness:.25});
+    box(root,sw,.012,sd,glass,x,topY+.009,z,false);
+    for(const dx of [-sw*.25,sw*.25])for(const dz of [-sd*.24,sd*.24]){
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(Math.min(.063,sw*.14),.006,7,18),ringMat);ring.rotation.x=Math.PI/2;ring.position.set(x+dx+activeModelOffsetX,topY+.018,z+dz+activeModelOffsetZ);root.add(ring);
+    }
+  }
+  function addBacksplashFeature(run,topY,orientation='back'){
+    if(!run)return;
+    const h=.12,t=.018,mat=stoneMat;
+    if(orientation==='side'){
+      const side=run.x<0?-1:1;box(root,t,h,run.length||.9,mat,(run.x||0)+side*((run.depth||.6)/2),topY+h/2,(run.z||0),false);
+    }else{
+      box(root,run.width||1.8,h,t,mat,(run.x||0),topY+h/2,(run.back??((run.z||0)-(run.depth||.6)/2))+.005,false);
+    }
+  }
+  function addUpperCabinets(back,topY,layoutType='straight'){
+    if(!back||!equipmentEnabled('upper',layoutType))return;
+    const w=Math.max(.9,back.width||1.8),count=Math.max(1,Math.min(5,Math.floor(w/0.85))),unit=w/count,z=(back.back??((back.z||0)-(back.depth||.6)/2))+.38,cy=2.03,h=.62,d=.34;
+    const upperColor=document.getElementById('main3d-upper-color')?.value||'#f3f1eb';
+    const cab=new THREE.MeshStandardMaterial({color:upperColor,roughness:.82}),edge=new THREE.MeshStandardMaterial({color:'#a5a29c',roughness:.7});
+    for(let i=0;i<count;i++){
+      const x=(back.x||0)-w/2+unit*(i+.5);box(root,unit-.018,h,d,cab,x,cy,z,false);
+      box(root,.012,h-.08,.012,edge,x+unit*.12,cy,z+d/2+.007,false);
+      box(root,.012,.07,.018,edge,x+unit*.12,cy,z+d/2+.018,false);
+    }
+  }
+  function addBaseCabinet(w,h,d,x,y,z,layoutType='straight'){
+    if(!equipmentEnabled('lower',layoutType))return;
+    box(root,w,h,d,cabinetMat,x,y,z,false);
+    const toe=new THREE.MeshStandardMaterial({color:'#aaa7a0',roughness:.82});box(root,w,.09,Math.max(.06,d-.06),toe,x,.08,z,false);
+    // Door fronts follow the selected lower-cabinet color while remaining slightly lighter for visual depth.
+    const doorTone=(cabinetMat?.color ? cabinetMat.color.clone() : new THREE.Color('#d9d6cf')).lerp(new THREE.Color('#ffffff'),.18);
+    const count=Math.max(1,Math.min(6,Math.floor(w/.58))),door=new THREE.MeshStandardMaterial({color:doorTone,roughness:.75}),handle=new THREE.MeshStandardMaterial({color:'#96948f',metalness:.4,roughness:.35});
+    for(let i=0;i<count;i++){
+      const dx=x-w/2+w*(i+.5)/count;box(root,w/count-.018,Math.max(.2,h-.18),.009,door,dx,y,z+d/2+.006,false);
+      box(root,.045,.012,.014,handle,dx,y+.03,z+d/2+.016,false);
+    }
+  }
+  function counterRun(parent,x,z,w,d,rotation=0){
+    box(parent,w,.72,d,cabinetMat,x,.42,z);
+    box(parent,w,.055,d+.035,stoneMat,x,.805,z);
+    // subtle toe-kick
+    box(parent,w,.09,d-.06,new THREE.MeshStandardMaterial({color:'#a9a7a1',roughness:.8}),x,.08,z);
+  }
+  function wallCabinet(x,z,w=1.05){
+    box(root,w,.82,.38,cabinetMat,x,2.18,z);
+    box(root,.012,.72,.012,new THREE.MeshStandardMaterial({color:'#9b9994'}),x,2.18,z+.2);
+  }
+  function getPatternImage(src){
+    if(patternImagePromise && patternImageSource===src) return patternImagePromise;
+    patternImageSource=src;
+    patternImagePromise=new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(new Error('花紋圖片載入失敗'));
+      img.src=src;
+    });
+    return patternImagePromise;
+  }
+  function applySlabCutTexture(mesh,p,faceType='top',edgeMaterial=null,token=buildGeneration){
+    if(!mesh)return;
+    const edge=edgeMaterial||new THREE.MeshStandardMaterial({color:'#c9c5bc',roughness:.6});
+    const faceMaterials=[edge,edge,edge,edge,edge,edge];
+    let faceIndices=[2]; // BoxGeometry groups: +X, -X, +Y, -Y, +Z, -Z
+    if(faceType==='top') faceIndices=[2];
+    else if(faceType==='side') faceIndices=[0,1];
+    else faceIndices=[4,5];
+    faceIndices.forEach(i=>faceMaterials[i]=stoneMat);
+    mesh.material=faceMaterials;
+    const src=(typeof patternImageData!=='undefined')?patternImageData:'';
+    if(!src)return;
+    getPatternImage(src).then(img=>{
+      if(token!==buildGeneration || mesh.parent!==root)return;
+      const W=Math.max(1,Number(document.getElementById('vL')?.value)||320);
+      const H=Math.max(1,Number(document.getElementById('vD')?.value)||160);
+      const trim=Math.max(0,Number(document.getElementById('vTrim')?.value)||0);
+      const px=Math.max(0,Number(p.x)||0),py=Math.max(0,Number(p.y)||0);
+      const sx=Math.min(img.width-1,Math.max(0,(trim+px)/W*img.width));
+      const sy=Math.min(img.height-1,Math.max(0,(trim+py)/H*img.height));
+      const sw=Math.max(1,Math.min(img.width-sx,(Number(p.w)||1)/W*img.width));
+      const sh=Math.max(1,Math.min(img.height-sy,(Number(p.h)||1)/H*img.height));
+      const c=document.createElement('canvas');c.width=512;c.height=512;
+      const ctx=c.getContext('2d');ctx.fillStyle='#efede7';ctx.fillRect(0,0,c.width,c.height);
+      const rotation=((Number(p.modelRotation??(p.rot?90:0))%360)+360)%360;
+      if(rotation){ctx.translate(c.width/2,c.height/2);ctx.rotate(rotation*Math.PI/180);ctx.drawImage(img,sx,sy,sw,sh,-c.width/2,-c.height/2,c.width,c.height);}
+      else ctx.drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);
+      const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.needsUpdate=true;
+      const mapped=new THREE.MeshStandardMaterial({map:tex,roughness:currentStoneRoughness,metalness:.01});
+      const current=Array.isArray(mesh.material)?mesh.material.slice():[edge,edge,edge,edge,edge,edge];
+      faceIndices.forEach(i=>current[i]=mapped);
+      mesh.material=current;
+    }).catch(err=>console.warn('Stone texture mapping:',err.message||err));
+  }
+  function clearRoot(){
+    if(!root)return;
+    const geometries=new Set(),materials=new Set(),textures=new Set();
+    root.traverse(o=>{
+      if(o.geometry)geometries.add(o.geometry);
+      const list=Array.isArray(o.material)?o.material:(o.material?[o.material]:[]);
+      list.forEach(m=>{
+        if(!m || m===stoneMat || m===cabinetMat || m===wallMat || m===floorMat)return;
+        materials.add(m);if(m.map && m.map!==stoneMat?.map)textures.add(m.map);
+      });
+    });
+    while(root.children.length)root.remove(root.children[0]);
+    geometries.forEach(g=>g.dispose?.());textures.forEach(t=>t.dispose?.());materials.forEach(m=>m.dispose?.());
+  }
+  function buildModelCore(options={}){
+    if(!root)return;
+    const all=Array.isArray(window.kitchenPlacedMaterials)?window.kitchenPlacedMaterials:[];
+    const classify=p=>{
+      const n=String(p.name||'').trim();
+      if(/中島/.test(n))return 'island';
+      if(/ㄇ字型/.test(n))return 'U';
+      if(/^L ?型|L型/.test(n))return 'L';
+      if(/一字型/.test(n))return 'straight';
+      // Legacy generic wall/counter names remain in a single-layout model.
+      return 'legacy';
+    };
+    const recognized=['straight','L','U','island'];
+    const present=recognized.filter(t=>isLayoutShown(t)&&all.some(p=>classify(p)===t));
+    const groups=present.map(type=>({type,items:all.filter(p=>classify(p)===type)}));
+    const legacy=all.filter(p=>classify(p)==='legacy');if(legacy.length)groups.push({type:'legacy',items:legacy});
+    clearRoot();
+    buildGeneration++;
+    if(!all.length){buildDraftModel();modelWasBuilt=true;fitCameraToModel();render();const source=document.getElementById('main3dSourceStatus');if(source)source.textContent='尚未匯入配料：顯示自由建模草稿；草稿尺寸不會自動進入切割清單。';if(status)status.textContent='設計草稿預覽｜尺寸尚未經 5.22B 配料確認';return;}
+    if(!groups.length){modelWasBuilt=true;const source=document.getElementById('main3dSourceStatus');if(source)source.textContent='目前沒有勾選可顯示的型式；配料資料仍保留。';if(status)status.textContent='配料資料已保留，但目前沒有選取可顯示型式。';fitCameraToModel();render();return;}
+    activeLayoutTypes=groups.map(g=>g.type);
+    // Calculate overall extents by kitchen layout (not just the largest individual slab).
+    // Keep slot positions stable even when a layout is temporarily hidden.
+    const dimsM = p => {
+      let a=Math.max(0,Number(p.w)||0)/100, b=Math.max(0,Number(p.h)||0)/100;
+      const r=((Number(p.modelRotation??(p.rot?90:0))%360)+360)%360;
+      if(r===90||r===270)[a,b]=[b,a];
+      return {a,b};
+    };
+    const topOnly = items => items.filter(p => Number(p.w)>0 && Number(p.h)>0 && !/壁面|左側牆|右側牆|側牆|落板|厚度|美背|側板/.test(String(p.name||'')));
+    const sumA = items => items.reduce((sum,p)=>sum+dimsM(p).a,0);
+    const maxB = items => items.length?Math.max(...items.map(p=>dimsM(p).b)):0;
+    const layoutFootprint = (type,items) => {
+      const tops=topOnly(items), names= p => String(p.name||'').trim();
+      const run = regex => tops.filter(p=>regex.test(names(p)));
+      let w=0,d=0;
+      if(type==='island'){
+        const a=run(/中島檯面/); w=sumA(a); d=maxB(a);
+      }else if(type==='straight'){
+        const a=run(/一字型檯面/); w=sumA(a); d=maxB(a);
+      }else if(type==='L'){
+        const long=run(/^L\s*型長邊檯面|^L型長邊檯面/), short=run(/^L\s*型短邊檯面|^L型短邊檯面/);
+        const longW=sumA(long), longD=maxB(long), sideLength=sumA(short), sideDepth=maxB(short);
+        w=longW+sideDepth; d=Math.max(longD,sideLength);
+      }else if(type==='U'){
+        const back=run(/ㄇ字型後側檯面/), left=run(/ㄇ字型左側檯面/), right=run(/ㄇ字型右側檯面/);
+        w=sumA(back)+maxB(left)+maxB(right); d=Math.max(maxB(back),sumA(left),sumA(right));
+      }
+      if(!(w>0)||!(d>0)){
+        const ds=tops.map(dimsM); w=ds.reduce((v,x)=>v+x.a,0); d=ds.length?Math.max(...ds.map(x=>x.b)):0;
+      }
+      const defaults={straight:{w:2.8,d:.65},island:{w:1.8,d:.9},L:{w:2.9,d:1.8},U:{w:3.6,d:2.0},legacy:{w:1.8,d:.7}};
+      return {w:Math.max(defaults[type]?.w||1.8,w),d:Math.max(defaults[type]?.d||.7,d)};
+    };
+    const allGroupsByType = Object.fromEntries(['straight','island','L','U','legacy'].map(type=>[type,all.filter(p=>classify(p)===type)]));
+    const sizes = Object.fromEntries(Object.entries(allGroupsByType).map(([type,items])=>[type,layoutFootprint(type,items)]));
+    const maxW=Math.max(2.8,...Object.values(sizes).map(v=>v.w));
+    const maxD=Math.max(2.0,...Object.values(sizes).map(v=>v.d));
+    const gap=1.75;
+    const xSlot=maxW/2+gap/2, zSlot=maxD/2+gap/2;
+    // Fixed 2x2 display: each type has its own slot to reduce overlap from most camera angles.
+    // Positions are stable when a type is hidden or shown again.
+    const positions={
+      straight:{x:-xSlot,z:-zSlot},
+      U:{x:-xSlot,z:zSlot},
+      L:{x:xSlot,z:zSlot},
+      island:{x:xSlot,z:-zSlot},
+      legacy:{x:0,z:maxD+gap+1}
+    };
+    const localCenter=(type,size)=>{
+      const wallBase=-1.65;
+      if(type==='straight')return {x:0,z:wallBase+size.d/2};
+      if(type==='island'){
+        // Anchor from the actual slab depth, not layoutFootprint's minimum display fallback.
+        // Otherwise a small / rotated island can be shifted away from its own cabinet geometry.
+        const actualIslandTops=topOnly(allGroupsByType.island||[]).filter(p=>/中島檯面/.test(String(p.name||'')));
+        const actualDepth=actualIslandTops.length?Math.max(...actualIslandTops.map(p=>dimsM(p).b)):size.d;
+        return {x:0,z:wallBase+.92+actualDepth/2};
+      }
+      if(type==='L'){
+        const items=allGroupsByType.L||[];
+        const tops=topOnly(items), short=tops.filter(p=>/^L\s*型短邊檯面|^L型短邊檯面/.test(String(p.name||'')));
+        return {x:-maxB(short)/2,z:wallBase+size.d/2};
+      }
+      if(type==='U')return {x:0,z:wallBase+size.d/2};
+      return {x:0,z:wallBase+size.d/2};
+    };
+    const failedLayouts=[];
+    groups.forEach(g=>{
+      const pos=positions[g.type]||{x:0,z:0};
+      const size=sizes[g.type]||sizes.legacy||{w:1.8,d:.7};
+      const local=localCenter(g.type,size);
+      activeModelOffsetX=pos.x-local.x;activeModelOffsetZ=pos.z-local.z;
+      // A bad item/layout should not prevent the remaining kitchen types from rendering.
+      try { buildModelCoreSingle(g.items,g.type); }
+      catch(err) {
+        console.error('Kitchen 3D layout failed ('+g.type+'):',err);
+        failedLayouts.push({type:g.type,message:err?.message||String(err)});
+      }
+    });
+    activeModelOffsetX=0;activeModelOffsetZ=0;
+    if(status){
+      const labels={straight:'一字型',L:'L 型',U:'ㄇ字型',island:'中島',legacy:'廚具'};
+      status.textContent=failedLayouts.length
+        ? '3D 部分型式建模失敗：'+failedLayouts.map(f=>(labels[f.type]||f.type)+'（'+f.message+'）').join('；')
+        : '3D 已更新：'+groups.map(g=>labels[g.type]||g.type).join('＋')+'；四種型式固定分區展示／縮放 100%–260%' + (groups.some(g=>g.type==='island')?'；中島使用獨立櫃體＋檯面外擴，預設不顯示上方吊櫃／吊燈':'');
+    }
+    const source=document.getElementById('main3dSourceStatus');if(source)source.textContent=`已載入 ${all.length} 件配料材料：3D 尺寸與板件來源由配料計算提供；型式勾選僅控制顯示。`;
+    if(!modelWasBuilt || options.fit!==false)fitCameraToModel();
+    modelWasBuilt=true;render();
+  }
+  function buildModelCoreSingle(importedOverride=null,layoutType='legacy'){
+    if(!root)return;
+    const token=buildGeneration;
+    const surface=document.getElementById('kpSurface')?.value||'honed'; // 固定使用截圖設定：絲絨霧面、低反光
+    const edge=document.getElementById('kpEdge')?.value||'strong'; // 固定使用截圖設定：加強倒角高光
+    const materialType='石英石'; // 3D 外觀沿用預設光澤；不再提供獨立板材類型選項
+    currentStoneRoughness=surface==='gloss'?.16:surface==='honed'?.78:surface==='satin'?.48:(materialType==='石英石'?.27:.36);
+    stoneMat.roughness=currentStoneRoughness;
+    // 石材本色不受吊櫃／下櫃色彩控制；使用原板上傳圖片貼圖，未上傳時使用中性石紋。
+    stoneMat.color.set('#ffffff');
+    const cm=v=>Math.max(0,Number(v)||0)/100;
+    const cmRaw=v=>Math.max(0,Number(v)||0);
+    const imported=Array.isArray(importedOverride)?importedOverride:(Array.isArray(window.kitchenPlacedMaterials)?window.kitchenPlacedMaterials:[]);
+    const nameOf=p=>String(p.name||'').trim();
+    const usable=imported.filter(p=>Number(p.w)>0&&Number(p.h)>0);
+    // Material rotation is an in-plane rotation. It changes the piece's local width/height,
+    // never an arbitrary world-space rotation of the installed face.
+    const rotOf=p=>((Number(p.modelRotation??(p.rot?90:0))%360)+360)%360;
+    const dims=p=>{const a=cm(p.w),b=cm(p.h),r=rotOf(p);return (r===90||r===270)?{a:b,b:a}:{a,b};};
+    const isVertical=p=>/美背|落板|厚度|壁面|側牆|側板|^(壁面|左側牆|右側牆)$/.test(nameOf(p));
+    const tops=usable.filter(p=>!isVertical(p));
+    const faces=usable.filter(isVertical);
+    const islandTops=tops.filter(p=>/中島檯面/.test(nameOf(p)));
+    const backTops=tops.filter(p=>/一字型檯面|L ?型長邊檯面|ㄇ字型後側檯面/.test(nameOf(p)));
+    const leftTops=tops.filter(p=>/L ?型短邊檯面|ㄇ字型左側檯面/.test(nameOf(p)));
+    const rightTops=tops.filter(p=>/ㄇ字型右側檯面/.test(nameOf(p)));
+    const assigned=new Set([...islandTops,...backTops,...leftTops,...rightTops]);
+    const generic=tops.filter(p=>!assigned.has(p));
+    const rearWallPiece=faces.find(p=>/^(壁面|一字型壁面|L型長邊壁面|ㄇ字型後側壁面)$/.test(nameOf(p)));
+    const leftWallPiece=faces.find(p=>/^(左側牆|一字型左側牆|L型長邊左壁面|L型短邊左壁面|ㄇ字型左側壁面)$/.test(nameOf(p)));
+    const rightWallPiece=faces.find(p=>/^(右側牆|一字型右側牆|L型長邊右壁面|L型短邊右壁面|ㄇ字型右側壁面)$/.test(nameOf(p)));
+    const rearWallDims=rearWallPiece?dims(rearWallPiece):null;
+    const leftWallDims=leftWallPiece?dims(leftWallPiece):null;
+    const rightWallDims=rightWallPiece?dims(rightWallPiece):null;
+    const slabT=Math.max(.6,Number(document.getElementById('main3d-thickness')?.value)||1.2)/100, wallT=.022, cabinetH=.86, topCenterY=cabinetH+slabT/2, topSurfaceY=cabinetH+slabT;
+    const wallFaceZ=-1.65; // Common datum: the rear countertop back edge meets this front-facing wall plane.
+    const wallBaseY=(tops.length?topSurfaceY:0.025);
+    const lowerCabColor=document.getElementById('main3d-lower-color')?.value||'#f3f1eb';
+    const matCab=new THREE.MeshStandardMaterial({color:lowerCabColor,roughness:.86});
+    const doorColor=new THREE.Color(lowerCabColor).lerp(new THREE.Color('#ffffff'),.18);
+    const matToe=new THREE.MeshStandardMaterial({color:'#aaa7a0',roughness:.82});
+    const matEdge=new THREE.MeshStandardMaterial({color:edge==='strong'?'#f9f9f7':'#c8cdd1',roughness:.3});
+    const matHandle=new THREE.MeshStandardMaterial({color:'#9b9994',roughness:.7});
+    const labelTextures=[];
+    function addLabel(text,x,y,z,scale=.9){
+      if(!text)return;
+      const c=document.createElement('canvas');c.width=384;c.height=80;
+      const ctx=c.getContext('2d');ctx.fillStyle='rgba(255,255,255,.88)';ctx.strokeStyle='rgba(45,55,65,.65)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.roundRect(3,3,378,74,10);ctx.fill();ctx.stroke();ctx.fillStyle='#17212b';ctx.font='bold 27px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text.length>14?text.slice(0,14)+'…':text,192,40);
+      const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;labelTextures.push(tex);
+      const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+      sprite.position.set(x+activeModelOffsetX,y,z+activeModelOffsetZ);sprite.scale.set(scale,.19*scale/.9,1);sprite.renderOrder=20;sprite.userData.isLabel=true;root.add(sprite);
+    }
+    function runMeta(items){
+      if(!items.length)return null;
+      const ds=items.map(p=>({p,...dims(p)}));
+      return {items:ds,width:ds.reduce((s,o)=>s+o.a,0),depth:Math.max(...ds.map(o=>o.b)),length:ds.reduce((s,o)=>s+o.a,0)};
+    }
+    function topPlacementFor(piece){
+      if(!piece)return null;
+      const nm=nameOf(piece), d=dims(piece);
+      let list=backTops, side=0;
+      if(/^L\s*型短邊檯面|^L型短邊檯面/.test(nm)){list=leftTops;side=-1;}
+      else if(/ㄇ字型左側檯面/.test(nm)){list=leftTops;side=-1;}
+      else if(/ㄇ字型右側檯面/.test(nm)){list=rightTops;side=1;}
+      const rm=runMeta(list);
+      if(!rm)return null;
+      let offset=0;
+      for(const p of list){if(p===piece)break;offset+=dims(p).a;}
+      if(side===0){
+        // Rear run pieces are placed side-by-side along X.
+        return {width:d.a,depth:d.b,x:-rm.width/2+offset+d.a/2,z:backStartZ+d.b/2};
+      }
+      // Side run pieces travel along Z; their actual countertop width is the rotated-in-place depth.
+      const x=back?side*(back.width/2+rm.depth/2):side*(rearWallSpan/2-rm.depth/2);
+      return {width:d.b,depth:d.a,x,z:backStartZ+offset+d.a/2};
+    }
+    const backMeta=runMeta(backTops.length?backTops:(!islandTops.length&&!leftTops.length&&!rightTops.length?generic:[]));
+    const leftMeta=runMeta(leftTops),rightMeta=runMeta(rightTops),islandMeta=runMeta(islandTops);
+    // If the rear wall piece is explicitly supplied, it is the authoritative wall span.
+    // Otherwise calculate a sensible span from the exact, unscaled counter dimensions.
+    const predictedWallSpan=(backMeta?.width||0)+(leftMeta?.depth||0)+(rightMeta?.depth||0);
+    const rearWallSpan=rearWallDims?.a || predictedWallSpan || backMeta?.width || 2.4;
+    // L kitchen wall datum: align the long-wall's right endpoint to the long countertop's right endpoint,
+    // so the perpendicular right wall can turn at the same corner instead of floating past the counter.
+    const isLKitchen = usable.some(p=>/^L ?型|^L型/.test(nameOf(p)));
+    const lBackWidth = backMeta?.width || 0;
+    const lWallStartX = (isLKitchen && lBackWidth>0 && rearWallDims)
+      ? (lBackWidth/2 - rearWallSpan) : -rearWallSpan/2;
+    const lRightCornerX = (isLKitchen && lBackWidth>0) ? lBackWidth/2 : rearWallSpan/2;
+    const backStartZ=wallFaceZ;
+    const islandStartFront= Math.max(
+      backMeta ? backStartZ+backMeta.depth : backStartZ,
+      leftMeta ? backStartZ+leftMeta.length : backStartZ,
+      rightMeta ? backStartZ+rightMeta.length : backStartZ
+    );
+    const islandZ=islandStartFront+.92+(islandMeta?.depth||.9)/2;
+
+    function drawCabinet(w,h,d,x,y,z){
+      if(!equipmentEnabled('lower',layoutType))return;
+      box(root,w,h,d,matCab,x,y,z);
+      box(root,w,.09,Math.max(.06,d-.06),matToe,x,.09,z);
+      const count=Math.max(1,Math.min(6,Math.floor(w/.58)));
+      for(let i=0;i<count;i++){
+        const dx=x-w/2+w*(i+.5)/count;
+        box(root,w/count-.018,Math.max(.22,h-.18),.008,new THREE.MeshStandardMaterial({color:doorColor,roughness:.76}),dx,y,z+d/2+.006);
+        box(root,.045,.012,.014,matHandle,dx,y+.03,z+d/2+.016);
+      }
+    }
+    function drawBackRun(items){
+      const meta=runMeta(items);if(!meta)return null;
+      const z=backStartZ+meta.depth/2;
+      drawCabinet(meta.width,cabinetH,meta.depth,0,cabinetH/2,z);
+      let x=-meta.width/2;
+      meta.items.forEach(o=>{
+        const cx=x+o.a/2;
+        const mesh=box(root,o.a,slabT,o.b,stoneMat,cx,topCenterY,z);
+        mesh.userData={materialName:nameOf(o.p),installFace:'horizontal-top',dimensionsCm:[cmRaw(o.p.w),cmRaw(o.p.h)]};
+        applySlabCutTexture(mesh,o.p,'top',matEdge,token);
+        box(root,o.a,.012,.012,matEdge,cx,topCenterY, z+o.b/2-.004);
+        addLabel(nameOf(o.p),cx,topSurfaceY+.12,z);
+        x+=o.a;});
+      return {width:meta.width,depth:meta.depth,x:0,z,back:backStartZ,front:backStartZ+meta.depth};
+    }
+    function drawIslandRun(items,centerZ){
+      const meta=runMeta(items);if(!meta)return null;
+      const z=centerZ;
+      // Island geometry: a compact cabinet carcass sits under a continuous countertop.
+      // Preserve the exact cut-slab dimensions, while showing a small 4 cm side overhang
+      // and 3 cm front/back overhang so the top is visibly distinct from the cabinet body.
+      const cabinetWidth=Math.max(.35,meta.width-.08);
+      const cabinetDepth=Math.max(.35,meta.depth-.06);
+      drawCabinet(cabinetWidth,cabinetH,cabinetDepth,0,cabinetH/2,z);
+      let x=-meta.width/2;
+      meta.items.forEach(o=>{
+        const cx=x+o.a/2;
+        const mesh=box(root,o.a,slabT,o.b,stoneMat,cx,topCenterY,z);
+        mesh.userData={materialName:nameOf(o.p),installFace:'horizontal-top',dimensionsCm:[cmRaw(o.p.w),cmRaw(o.p.h)]};
+        applySlabCutTexture(mesh,o.p,'top',matEdge,token);
+        box(root,o.a,.012,.012,matEdge,cx,topCenterY,z+o.b/2-.004);
+        addLabel(nameOf(o.p),cx,topSurfaceY+.12,z);
+        x+=o.a;
+      });
+      return {width:meta.width,depth:meta.depth,z,front:z+meta.depth/2,back:z-meta.depth/2};
+    }
+    function drawSideRun(items,side,back){
+      const meta=runMeta(items);if(!meta)return null;
+      // A side run's inside edge abuts the end of the rear run. If no rear run exists,
+      // align its outer edge with the declared wall span instead.
+      const x=back ? side*(back.width/2+meta.depth/2) : side*(rearWallSpan/2-meta.depth/2);
+      const z=backStartZ+meta.length/2;
+      drawCabinet(meta.depth,cabinetH,meta.length,x,cabinetH/2,z);
+      let zz=backStartZ;
+      meta.items.forEach(o=>{
+        const cz=zz+o.a/2;
+        const mesh=box(root,o.b,slabT,o.a,stoneMat,x,topCenterY,cz);
+        mesh.userData={materialName:nameOf(o.p),installFace:'horizontal-top',dimensionsCm:[cmRaw(o.p.w),cmRaw(o.p.h)]};
+        applySlabCutTexture(mesh,o.p,'top',matEdge,token);
+        addLabel(nameOf(o.p),x,topSurfaceY+.12,cz);
+        zz+=o.a;
+      });
+      return {length:meta.length,depth:meta.depth,x,z:backStartZ+meta.length/2,front:backStartZ+meta.length,back:backStartZ};
+    }
+    const back=drawBackRun(backTops.length?backTops:(!islandTops.length&&!leftTops.length&&!rightTops.length?generic:[]));
+    const left=drawSideRun(leftTops,-1,back);
+    const right=drawSideRun(rightTops,1,back);
+    const island=drawIslandRun(islandTops,islandZ);
+    const islandGeom={width:island?.width||1.8,depth:island?.depth||.9,z:island?.z||islandZ,front:island?.front??islandZ+.45,back:island?.back??islandZ-.45};
+    // 2.9: do not generate backsplash/wall strips in the 3D background.
+    const fixtureRun=back||island||(left?{x:left.x,z:left.z,width:left.length,depth:left.depth}:null)||(right?{x:right.x,z:right.z,width:right.length,depth:right.depth}:null);
+    if(fixtureRun){
+      addSinkFeature(fixtureRun,topSurfaceY,layoutType);
+      addFaucetFeature(fixtureRun,topSurfaceY,layoutType);
+      addDishwasherFeature(fixtureRun,topSurfaceY,layoutType);
+      addCooktopFeature(fixtureRun,topSurfaceY,layoutType);
+    }
+    // Wall-mounted cabinets belong to wall runs. An island starts without overhead cabinets;
+    // users can opt in from the island-specific checkbox when a custom design requires them.
+    const upperRun=back||((layoutType==='island'&&equipmentEnabled('upper','island'))?island:null);
+    if(upperRun) addUpperCabinets(upperRun,topSurfaceY,layoutType);
+    let faceCount=0,clampedPanels=0;
+    faces.forEach(p=>{
+      const nm=nameOf(p);
+      // 2.9: wall/splash/back-wall components remain in source data but are not rendered as background panels.
+      if(/壁面|側牆|左側牆|右側牆/.test(nm))return;
+      const d=dims(p);
+      const span=Math.max(.08,d.a),rawHeight=Math.max(.08,d.b);
+      let x=0,y=0,z=0,w=.022,h=rawHeight,dep=.022,faceType='rear',labelX=0,labelY=0,labelZ=0,frontYaw=0;
+      const isRear=/^(壁面|一字型壁面|L型長邊壁面|ㄇ字型後側壁面)$/.test(nm),isLeft=/^(左側牆|一字型左側牆|L型長邊左壁面|L型短邊左壁面|ㄇ字型左側壁面)$/.test(nm),isRight=/^(右側牆|一字型右側牆|L型長邊右壁面|L型短邊右壁面|ㄇ字型右側壁面)$/.test(nm);
+      const isFrontThickness=/^(一字型正面厚度|L型(長邊|短邊)正面厚度|ㄇ字型(左側|後側|右側)正面厚度)$/.test(nm);
+      if(isFrontThickness){
+        // Each fascia is attached to the front edge of its corresponding countertop segment.
+        const isStraightFront=nm==='一字型正面厚度';
+        const isLLongFront=nm==='L型長邊正面厚度';
+        const isLShortFront=nm==='L型短邊正面厚度';
+        const isULeftFront=nm==='ㄇ字型左側正面厚度';
+        const isURearFront=nm==='ㄇ字型後側正面厚度';
+        const isURightFront=nm==='ㄇ字型右側正面厚度';
+        const matchName = isStraightFront ? /^一字型檯面$/ :
+          isLLongFront ? /^L ?型長邊檯面$/ :
+          isLShortFront ? /^L ?型短邊檯面$/ :
+          isULeftFront ? /^ㄇ字型左側檯面$/ :
+          isURearFront ? /^ㄇ字型後側檯面$/ : /^ㄇ字型右側檯面$/;
+        const topPiece=usable.find(q=>matchName.test(nameOf(q)));
+        const topMeta=topPiece?topPlacementFor(topPiece):null;
+        w=topMeta?.width || span;h=rawHeight;dep=wallT;
+        x=topMeta?.x || 0;
+        z=topMeta ? topMeta.z + topMeta.depth/2 + wallT/2 : wallFaceZ+(topMeta?.depth||.6)+wallT/2;
+        y=wallBaseY+h/2;faceType='front';
+        // Orient the left straight front toward the left; L long/short fronts right;
+        // U front pieces align to left/rear/right segments respectively.
+        frontYaw=isStraightFront ? -Math.PI/2 :
+          (isLLongFront||isLShortFront) ? Math.PI/2 :
+          isULeftFront ? -Math.PI/2 : isURearFront ? 0 : Math.PI/2;
+        labelX=x;labelY=wallBaseY+h*.55;labelZ=z+wallT/2+.025;
+      }else if(isRear){
+        w=span;h=rawHeight;dep=wallT;
+        x=(isLKitchen && /L型長邊壁面/.test(nm)) ? (lWallStartX + span/2) : 0;
+        z=wallFaceZ-wallT/2;y=wallBaseY+h/2;faceType='rear';
+        labelX=x;labelY=wallBaseY+h*.55;labelZ=wallFaceZ+.025;
+      }else if(isLeft||isRight){
+        const side=isLeft?-1:1;
+        w=wallT;h=rawHeight;dep=span;
+        const isLShortWall = isLKitchen && /L型短邊(左|右)?壁面/.test(nm);
+        const matchingSideMeta = /左壁面/.test(nm) ? leftMeta : /右壁面/.test(nm) ? rightMeta : (rightMeta || leftMeta);
+        const sideCounterDepth = matchingSideMeta?.depth || .60;
+        const isLRightTurn = isLKitchen && /L型長邊右壁面/.test(nm);
+        const isLLeftTurn = isLKitchen && /L型長邊左壁面/.test(nm);
+        if(isLShortWall){
+          // Short-leg wall is parallel to its short countertop. Its inner face starts at the
+          // countertop's outside edge; the panel's length follows the same rear-to-front Z axis.
+          const cornerX = (back?.width || backMeta?.width || rearWallSpan)/2;
+          x=side*(cornerX+sideCounterDepth);
+          z=wallFaceZ+span/2;
+        }else{
+          x=isLRightTurn ? lRightCornerX : isLLeftTurn ? -((backMeta?.width||rearWallSpan)/2) : side*rearWallSpan/2;
+          z=wallFaceZ+span/2;
+        }
+        y=wallBaseY+h/2;faceType='side';
+        labelX=x+side*(wallT/2+.025);labelY=wallBaseY+h*.55;labelZ=wallFaceZ+span*.52;
+      }else if(/中島左側落板/.test(nm)||/中島右側落板/.test(nm)){
+        const side=/左側/.test(nm)?-1:1;
+        w=wallT;h=Math.min(rawHeight,topSurfaceY-.02);if(rawHeight>h+.01)clampedPanels++;
+        dep=span;x=side*islandGeom.width/2;z=islandGeom.z;
+        y=topSurfaceY-h/2;faceType='side';labelX=x+side*.025;labelY=y;labelZ=z;
+      }else if(/中島背面美背|中島背面厚度/.test(nm)){
+        w=span;h=Math.min(rawHeight,cabinetH);if(rawHeight>h+.01)clampedPanels++;
+        dep=wallT;x=0;z=islandGeom.back-wallT/2;y=cabinetH-h/2;faceType='rear';labelX=x;labelY=y;labelZ=z+.025;
+      }else if(/中島正面美背|中島正面厚度/.test(nm)){
+        w=span;h=Math.min(rawHeight,cabinetH);if(rawHeight>h+.01)clampedPanels++;
+        dep=wallT;x=0;z=islandGeom.front+wallT/2;y=cabinetH-h/2;faceType='rear';labelX=x;labelY=y;labelZ=z+.025;
+      }else{
+        // Explicitly classified but otherwise unknown vertical panels are shown as a labeled standing sample,
+        // instead of silently disappearing from the 3D scene.
+        w=span;h=rawHeight;dep=wallT;x=rearWallSpan/2+.35;z=wallFaceZ+span/2;y=wallBaseY+h/2;faceType='rear';labelX=x;labelY=wallBaseY+h*.55;labelZ=z+.025;
+      }
+      const mesh=box(root,w,h,dep,stoneMat,x,y,z);
+      if(faceType==='front' && typeof frontYaw==='number') mesh.rotation.y=frontYaw;
+      mesh.userData={materialName:nm,installFace:faceType,dimensionsCm:[cmRaw(p.w),cmRaw(p.h)],rotation:rotOf(p)};
+      applySlabCutTexture(mesh,p,faceType,matEdge,token);
+      addLabel(nm,labelX,labelY,labelZ,.82);faceCount++;
+    });
+    // Design-only waterfall fallback: show selected island end panels even when they are not separate cut-list parts.
+    // Crucially, these visible panels are never inserted into window.kitchenPlacedMaterials or the slab layout.
+    if(islandTops.length){
+      const hasLeftWaterfall=usable.some(p=>/中島左側落板/.test(nameOf(p)));
+      const hasRightWaterfall=usable.some(p=>/中島右側落板/.test(nameOf(p)));
+      const fallbackPanelH=Math.max(.3,topSurfaceY-.015);
+      if(!hasLeftWaterfall){
+        box(root,wallT,fallbackPanelH,islandGeom.depth,stoneMat,-islandGeom.width/2+wallT/2,fallbackPanelH/2,islandGeom.z,false);
+      }
+      if(!hasRightWaterfall){
+        box(root,wallT,fallbackPanelH,islandGeom.depth,stoneMat,islandGeom.width/2-wallT/2,fallbackPanelH/2,islandGeom.z,false);
+      }
+    }
+    // Generic / '其他' countertop pieces are shown on a small supported staging shelf,
+    // so every imported part remains visible and is not falsely assigned to a kitchen face.
+    if(generic.length && (backTops.length||islandTops.length||leftTops.length||rightTops.length)){
+      const meta=runMeta(generic),x=rearWallSpan/2+meta.depth/2+.55;
+      const z=wallFaceZ+meta.length/2;
+      drawCabinet(meta.depth,cabinetH,meta.length,x,cabinetH/2,z);
+      let zz=wallFaceZ;
+      meta.items.forEach(o=>{
+        const cz=zz+o.a/2;
+        const mesh=box(root,o.b,slabT,o.a,stoneMat,x,topCenterY,cz);
+        mesh.userData={materialName:nameOf(o.p),installFace:'unassigned-display',dimensionsCm:[cmRaw(o.p.w),cmRaw(o.p.h)]};
+        applySlabCutTexture(mesh,o.p,'top',matEdge,token);addLabel('待定位：'+nameOf(o.p),x,topSurfaceY+.12,cz,.76);zz+=o.a;
+      });
+    }
+    // Keep the scene light: pendants are shown only with a wall or island counter present.
+    const showPendant=!!back||(!!island&&equipmentEnabled('upper','island'));
+    const lampZ=island?island.z:((back?.front??wallFaceZ)+.5);
+    if(showPendant){for(const x of [-.7,.8]){const cable=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.34,6),new THREE.MeshStandardMaterial({color:'#33383c'}));cable.position.set(x+activeModelOffsetX,2.48,lampZ+activeModelOffsetZ);root.add(cable);const lamp=new THREE.Mesh(new THREE.CylinderGeometry(.10,.14,.07,12),new THREE.MeshStandardMaterial({color:'#d8d0bd',metalness:.08,roughness:.42}));lamp.position.set(x+activeModelOffsetX,2.28,lampZ+activeModelOffsetZ);root.add(lamp);}}
+
+    const widthMismatch=rearWallPiece && (leftMeta||rightMeta) && Math.abs(rearWallSpan-predictedWallSpan)>.08;
+    const statusEl=document.getElementById('kitchen3DMaterialStatus');
+    const warnings=[];
+    if(widthMismatch)warnings.push(`壁面跨度 ${Math.round(rearWallSpan*100)} cm 與檯面推算外寬 ${Math.round(predictedWallSpan*100)} cm 不一致；已保留材料原尺寸，請核對尺寸`);
+    if(leftWallDims&&leftMeta&&Math.abs(leftWallDims.a-leftMeta.length)>.08)warnings.push(`左側牆長 ${Math.round(leftWallDims.a*100)} cm 與左側檯面長 ${Math.round(leftMeta.length*100)} cm 不一致`);
+    if(rightWallDims&&rightMeta&&Math.abs(rightWallDims.a-rightMeta.length)>.08)warnings.push(`右側牆長 ${Math.round(rightWallDims.a*100)} cm 與右側檯面長 ${Math.round(rightMeta.length*100)} cm 不一致`);
+    if(rearWallDims&&leftWallDims&&Math.abs(rearWallDims.b-leftWallDims.b)>.08)warnings.push('壁面與左側牆高度不同，請核對是否為現場設計需求');
+    if(rearWallDims&&rightWallDims&&Math.abs(rearWallDims.b-rightWallDims.b)>.08)warnings.push('壁面與右側牆高度不同，請核對是否為現場設計需求');
+    if(clampedPanels)warnings.push(`${clampedPanels} 件中島落板／美背高度超出櫃體可安裝高度，模型以櫃體高度顯示`);
+    const note=warnings.length?'；尺寸提示：'+warnings.join('；'):'';
+    if(statusEl)statusEl.textContent=usable.length?`已匯入 ${usable.length} 件材料：檯面以水平面組裝、牆板以垂直面組裝；左右側牆共用壁面端點與高度基準；花紋只貼在石材大面；${faceCount} 件垂直面板${generic.length&&backTops.length+islandTops.length+leftTops.length+rightTops.length?'；未指定材料放在展示架':''}${note}`:'尚未匯入配料。請先完成排版並按「送入廚房示意」。';
+    const mode=rightTops.length?'ㄇ字型':leftTops.length?'L 型':islandTops.length?'中島':'一字型';
+    if(status)status.textContent='3D 已更新：'+mode+'；採用共用定位基準／面向貼圖／自動取景'+(warnings.length?'；請查看尺寸提示':'');
+    // Fit the camera to actual mesh bounds instead of assuming every kitchen uses the same size.
+    fitCameraToModel();
+    render();
+  }
+  function fitCameraToModel(){
+    if(!root||!camera)return;
+    root.updateWorldMatrix(true,true);
+    const bounds=new THREE.Box3();
+    root.traverse(o=>{if(o.isMesh && o.visible)bounds.union(new THREE.Box3().setFromObject(o,true));});
+    if(bounds.isEmpty())return;
+    const center=bounds.getCenter(new THREE.Vector3());
+    const size=bounds.getSize(new THREE.Vector3());
+    target.copy(center);
+
+    // Fit actual visible model bounds to a target viewport occupancy:
+    // width <= 70%, height <= 60%, with a small safety margin for perspective/rotation.
+    const vFov=(camera.fov||42)*Math.PI/180;
+    // Use a normalized virtual aspect ratio for framing so straight/L/U/island layouts
+    // keep a more consistent perceived scale even when the preview container changes shape.
+    const actualAspect=Math.max(.1,camera.aspect||1);
+    const virtualAspect=1.30;
+    const hFov=2*Math.atan(Math.tan(vFov/2)*virtualAspect);
+    const fitHeight=Math.max(.1,size.y);
+    const fitWidth=Math.max(.1,size.x);
+    const fitDepth=Math.max(.1,size.z);
+    const heightDistance=(fitHeight/2)/(Math.tan(vFov/2)*.60);
+    const widthDistance=(fitWidth/2)/(Math.tan(hFov/2)*.70);
+    const depthDistance=(fitDepth/2)/(Math.tan(hFov/2)*.70);
+    // Fit the bounding-box diagonal with a normalized framing scale, then cap it
+    // to avoid extreme camera distances when one model dimension is unusually long.
+    const radius=Math.max(.8,size.length()/2);
+    const sphereDistance=radius/Math.sin(Math.min(vFov,hFov)/2)*.67;
+    const fitted=Math.max(heightDistance,widthDistance,depthDistance,sphereDistance)+.18;
+    fitDistance=clamp(fitted,3,30);
+    // Reset/autofit starts at 100%; wheel and pinch zoom are clamped to 100%-260%.
+    distance=fitDistance;
+    pitch=clamp(pitch,.25,.9);
+  }
+  function buildModel(options={}){try{buildModelCore(options);}catch(err){console.error('Kitchen 3D model build failed:',err);if(status)status.textContent='3D 建模錯誤：'+(err?.message||String(err));}}
+  function buildDraftModel(){
+    if(!root)return;
+    clearRoot();buildGeneration++;
+    const draftDims={'s-w':300,'s-d':60,'s-y':90,'i-w':180,'i-d':90,'i-y':90,'l-w':240,'l-d':160,'l-depth':60,'l-y':90,'u-w':240,'u-d':160,'u-depth':60,'u-y':90};
+    const draftPos={'s-x':-220,'s-z':-160,'i-x':0,'i-z':40,'l-x':220,'l-z':-150,'u-x':-220,'u-z':180};
+    const cm=id=>Math.max(1,draftDims[id]||60)/100;
+    const pos=id=>((draftPos[id]||0)/100);
+    const t=Math.max(.006,readValue('main3d-thickness',1.2)/100), baseH=.86, topY=.86+t;
+    const lowerColor=document.getElementById('main3d-lower-color')?.value||'#d9d6cf';
+    if(cabinetMat?.color)cabinetMat.color.set(lowerColor);
+    stoneMat.color.set('#ffffff');
+    const selected=[];
+    const addRun=(type,x,z,w,d,height=topY,trackForEquipment=true)=>{
+      if(equipmentEnabled('lower',type))addBaseCabinet(w,height-t,d,x,height/2,z,type);
+      box(root,w,t,d,stoneMat,x,height-t/2,z,false);
+      const run={x,z,width:w,depth:d,z,back:z-d/2,front:z+d/2};
+      // 2.8: no default backsplash/wall strip in draft preview.
+      if(equipmentEnabled('upper',type))addUpperCabinets(run,height,type);
+      if(trackForEquipment && !selected.some(o=>o.type===type))selected.push({type,run,height});return run;
+    };
+    if(readToggle('main3d-show-straight',true)){
+      const w=cm('s-w'),d=cm('s-d'),y=cm('s-y'),x=pos('s-x'),z=pos('s-z');addRun('straight',x,z,w,d,y);
+    }
+    if(readToggle('main3d-show-island',true)){
+      const w=cm('i-w'),d=cm('i-d'),y=cm('i-y'),x=pos('i-x'),z=pos('i-z'),run=addRun('island',x,z,w,d,y);
+      box(root,t,Math.max(.3,y-t),d,stoneMat,x-w/2+t/2,y/2,z,false);
+      box(root,t,Math.max(.3,y-t),d,stoneMat,x+w/2-t/2,y/2,z,false);
+    }
+    if(readToggle('main3d-show-L',false)){
+      const w=cm('l-w'),len=cm('l-d'),d=cm('l-depth'),y=cm('l-y'),x=pos('l-x'),z=pos('l-z');addRun('L',x,z,w,d,y);addRun('L',x+w/2-d/2,z+len/2-d/2,d,len,y,false);
+    }
+    if(readToggle('main3d-show-U',false)){
+      const w=cm('u-w'),len=cm('u-d'),d=cm('u-depth'),y=cm('u-y'),x=pos('u-x'),z=pos('u-z');addRun('U',x,z,w,d,y);addRun('U',x-w/2+d/2,z+len/2-d/2,d,len,y,false);addRun('U',x+w/2-d/2,z+len/2-d/2,d,len,y,false);
+    }
+    selected.forEach(o=>{
+      addSinkFeature(o.run,o.height,o.type);
+      addFaucetFeature(o.run,o.height,o.type);
+      addDishwasherFeature(o.run,o.height,o.type);
+      addCooktopFeature(o.run,o.height,o.type);
+    });
+    if(status)status.textContent='設計草稿預覽｜尚未匯入 5.22B 配料；尺寸只供配置討論，不是實際切割結果。';
+  }
+  function resize(){
+    if(!renderer||!camera)return;
+    const r=canvas.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height);
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+    if(!modelWasBuilt)fitCameraToModel();
+    render();
+  }
+  function updateCamera(){
+    camera.position.set(target.x+distance*Math.cos(pitch)*Math.sin(yaw),target.y+distance*Math.sin(pitch),target.z+distance*Math.cos(pitch)*Math.cos(yaw));
+    camera.lookAt(target);
+  }
+  function render(){if(!renderer||!kitchen3DActive&&document.getElementById('kitchenPrompt')?.classList.contains('active')===false)return;updateCamera();renderer.render(scene,camera);}
+  function stopKitchenAnimation(){if(frame){cancelAnimationFrame(frame);frame=0;}}
+  function startKitchenAnimation(){if(!frame&&autoRotate&&kitchen3DActive&&!document.hidden)frame=requestAnimationFrame(animate);}
+  function animate(){frame=0;if(!kitchen3DActive||document.hidden||!autoRotate)return;if(!dragging){yaw-=.003;render();}frame=requestAnimationFrame(animate);}
+  window.setKitchen3DActive=function(active){const was=kitchen3DActive;kitchen3DActive=!!active;if(!kitchen3DActive)stopKitchenAnimation();else{resize();if(!was)fitCameraToModel();render();if(autoRotate)startKitchenAnimation();}};
+  window.resizeKitchen3D=resize;
+  window.setKitchen3DFloorStyle=function(style){applyFloorStyle(style);};
+  window.resetKitchen3DView=function(){yaw=-.72;pitch=.48;fitCameraToModel();render();};
+  window.fitKitchen3DView=function(){fitCameraToModel();render();};
+  window.toggleKitchen3DAutoRotate=function(){autoRotate=!autoRotate;const b=document.getElementById('kitchen3DRotateBtn');if(b)b.textContent=autoRotate?'Ⅱ 停止旋轉':'▶ 自動旋轉';if(autoRotate)startKitchenAnimation();else stopKitchenAnimation();};
+  window.updateKitchen3D=buildModel;
+  document.querySelectorAll('#kpSurface,#kpEdge,#kpVein,#kpCamera,#kpLighting').forEach(el=>el.addEventListener('change',()=>buildModel({fit:false})));
+  function safeInit(){try{init();}catch(err){console.error('Kitchen 3D init failed:',err);status.textContent='3D 建立失敗：'+(err?.message||String(err))+'。請確認瀏覽器支援 WebGL，並重新整理。';}}
+  window.addEventListener('error',e=>{if(status&&status.textContent.includes('正在建立'))status.textContent='3D 發生錯誤：'+(e.message||'未知錯誤');});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',safeInit);else safeInit();
+})();
+</script>
+
+<script>
+// 2.10 單一 3D 引擎整合橋接：只保留 5.22B 配料資料與主 3D 模型，移除第二套自由建模引擎以降低卡頓。
+(function(){
+  const layoutTypes = ['straight','island','L','U'];
+  const accessoryTypes = ['sink','faucet','stove','dishwasher','upper','lower'];
+  const typeSuffix = {straight:'straight', island:'island', L:'l', U:'u'};
+  const renderRelevantIds = [
+    ...layoutTypes.map(t=>'main3d-show-'+t),
+    ...layoutTypes.flatMap(t=>accessoryTypes.map(a=>'main3d-equip-'+typeSuffix[t]+'-'+a)),
+    'main3d-upper-color','main3d-lower-color','main3d-thickness','main3d-floor-style'
+  ];
+  window.updateMain3dLayoutFromMaterials = function(data){
+    const names = (Array.isArray(data) ? data : []).map(p => String(p?.name || ''));
+    const present = {
+      straight: names.some(n => /一字型/.test(n)),
+      island: names.some(n => /中島/.test(n)),
+      L: names.some(n => /^L ?型|L型/.test(n)),
+      U: names.some(n => /ㄇ字型/.test(n))
+    };
+    const hasRecognized = Object.values(present).some(Boolean);
+    if (!hasRecognized) return;
+    for (const type of layoutTypes) {
+      const el = document.getElementById('main3d-show-' + type);
+      if (el) el.checked = !!present[type];
+    }
+  };
+  window.sim1OnMaterialsChanged = function(){
+    window.updateMain3dLayoutFromMaterials?.(window.kitchenPlacedMaterials || []);
+    if (typeof window.renderKitchenImportedMaterials === 'function') window.renderKitchenImportedMaterials();
+    if (document.getElementById('kitchenPrompt')?.classList.contains('active')) window.updateKitchen3D?.({fit:true});
+  };
+  window.sim1RefreshSharedData = function(){
+    // An uploaded slab image changes only the stone texture source, never cabinet colors.
+    if (document.getElementById('kitchenPrompt')?.classList.contains('active')) window.updateKitchen3D?.({fit:false});
+  };
+  // Mobile-friendly solid floor swatches update the same canonical state used by the 3D engine.
+  document.querySelectorAll('.k3d-floor-swatch[data-floor-tone]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const state = document.getElementById('main3d-floor-style');
+      if (!state) return;
+      state.value = btn.dataset.floorTone || 'gray';
+      document.querySelectorAll('.k3d-floor-swatch[data-floor-tone]').forEach(other => {
+        other.setAttribute('aria-pressed', String(other === btn));
+      });
+      state.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+  renderRelevantIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      const kitchenActive = document.getElementById('kitchenPrompt')?.classList.contains('active');
+      if (id === 'main3d-floor-style') { window.setKitchen3DFloorStyle?.(el.value); }
+      else if (kitchenActive) window.updateKitchen3D?.({fit: id.startsWith('main3d-show-')});
+    });
+  });
+  // Slab dimensions affect texture mapping and reframe only when the 3D page is in use.
+  ['vL','vD','vTrim'].forEach(id => document.getElementById(id)?.addEventListener('change', () => {
+    if (document.getElementById('kitchenPrompt')?.classList.contains('active')) window.updateKitchen3D?.({fit:false});
+  }));
+  document.addEventListener('visibilitychange', () => {
+    const active = document.querySelector('.page.active')?.id === 'kitchenPrompt';
+    window.setKitchen3DActive?.(active && !document.hidden);
+  });
+})();
+</script>
+
+<script>
+// PWA：僅在 HTTPS／localhost 等安全來源註冊；file:// 桌面直接開啟不會嘗試註冊。
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .catch(err => console.warn('PWA 離線快取未啟用：', err));
+  });
+}
+</script>
+
+<style>
+
+/* PWA install dock: visible only when not already launched standalone */
+.pwa-install-dock{position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom, 0px));z-index:100000;display:none;max-width:min(92vw,390px);padding:10px 12px;border:1px solid #cbd5e1;border-radius:16px;background:#fffffffa;box-shadow:0 8px 28px #0f172a26;align-items:center;gap:9px;color:#0f2745;font:inherit}
+.pwa-install-dock.visible{display:flex}
+.pwa-install-logo{width:34px;height:34px;border-radius:9px;object-fit:cover;flex:0 0 34px}
+.pwa-install-copy{min-width:0;flex:1;font-size:12px;line-height:1.45}
+.pwa-install-copy strong{display:block;font-size:13px}
+.pwa-install-action{min-height:42px;white-space:nowrap;border:0;border-radius:10px;padding:9px 12px;background:#173f68;color:#fff;font-weight:900;font-size:13px;cursor:pointer;touch-action:manipulation}
+.pwa-install-close{align-self:flex-start;border:0;background:transparent;color:#64748b;font-size:18px;padding:0 2px;cursor:pointer}
+@media(max-width:620px){.pwa-install-dock{left:10px;right:10px;bottom:calc(82px + env(safe-area-inset-bottom, 0px));max-width:none}.pwa-install-action{min-width:94px}}
+@media(display-mode:standalone){.pwa-install-dock{display:none!important}}
+
+</style>
+
+<script>
+// PWA install UX: Android/Chromium uses the native install prompt; iOS uses Safari's Add to Home Screen flow.
+(function(){
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+  if (standalone()) return;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  const isSafariIOS = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  let deferredPrompt = null;
+  let dock, installBtn, copyEl;
+  function hide(){ if(dock) dock.classList.remove('visible'); }
+  function show(){
+    if(standalone() || sessionStorage.getItem('cs-pwa-install-dismissed') === '1') return;
+    if(!dock){
+      dock=document.createElement('aside'); dock.className='pwa-install-dock'; dock.setAttribute('aria-label','安裝呈盛大板 3D 模擬器');
+      dock.innerHTML='<img class="pwa-install-logo" src="./icons/icon-192.png" alt=""><div class="pwa-install-copy"><strong>安裝呈盛大板 3D</strong><span class="pwa-install-message"></span></div><button type="button" class="pwa-install-action">安裝 APP</button><button type="button" class="pwa-install-close" aria-label="關閉安裝提示">×</button>';
+      document.body.appendChild(dock); installBtn=dock.querySelector('.pwa-install-action'); copyEl=dock.querySelector('.pwa-install-message');
+      dock.querySelector('.pwa-install-close').addEventListener('click',()=>{hide();sessionStorage.setItem('cs-pwa-install-dismissed','1');});
+      installBtn.addEventListener('click',async()=>{
+        if(deferredPrompt){
+          deferredPrompt.prompt();
+          try{const choice=await deferredPrompt.userChoice;if(choice && choice.outcome==='accepted')hide();}catch(_){}
+          deferredPrompt=null;
+          return;
+        }
+        if(isIOS){
+          const message=isSafariIOS
+            ? '請按 Safari 的「分享」圖示，再選「加入主畫面」。若有「以網頁 App 開啟」選項，請保持開啟後新增。安裝後請從主畫面圖示開啟。'
+            : '請用 iPhone 的 Safari 開啟本網站，再按「分享」→「加入主畫面」。安裝後請從主畫面圖示開啟。';
+          alert(message);
+        } else if(isAndroid){
+          alert('請確認已用 HTTPS 網址開啟，然後在 Chrome 右上角「⋮」選單選「安裝應用程式」。如果只看到「加到主畫面」，請先更新網站並確認已啟用 GitHub Pages，再重新開啟。安裝後從主畫面圖示開啟，不要再點瀏覽器書籤。');
+        } else {
+          alert('請使用支援 PWA 安裝的瀏覽器，並從 HTTPS 網址開啟本網站。');
+        }
+      });
+    }
+    copyEl.textContent = isIOS ? '加入主畫面後，可像 APP 一樣獨立開啟。' : '安裝後從主畫面圖示開啟，隱藏網址列。';
+    installBtn.textContent = deferredPrompt ? '立即安裝' : '安裝教學';
+    dock.classList.add('visible');
+  }
+  window.addEventListener('beforeinstallprompt', e=>{e.preventDefault();deferredPrompt=e;show();});
+  window.addEventListener('appinstalled',()=>{hide();deferredPrompt=null;});
+  window.addEventListener('load',()=>{ if(isIOS || isAndroid) setTimeout(show,1200); });
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden && standalone())hide();});
+})();
+</script>
+
+</body></html>

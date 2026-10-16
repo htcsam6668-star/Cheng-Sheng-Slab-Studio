@@ -1,0 +1,43 @@
+{
+  "id": "./",
+  "name": "呈盛大板 3D 石材設計模擬器",
+  "short_name": "呈盛大板3D",
+  "description": "呈盛大板 3D 石材設計與配料模擬器：配料計算、排版、廚具 3D 預覽。安裝後可從主畫面以獨立視窗開啟。",
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
+  "orientation": "any",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "categories": [
+    "productivity",
+    "design",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
